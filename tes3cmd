@@ -5786,8 +5786,8 @@ OPTIONS:
 
  --merge-objects
 	merges leveled lists used in your active plugins. Note that when you
-	use this feature, you do NOT also need other merged lists plugins like
-	"Merged_Objects.esp" from TesTool.
+	use this feature, you do NOT also need other merged object plugins like
+	"Merged_Objects.esp" from TesTool. (NOT IMPLEMENTED YET).
 
  --no-activate
 	do not automatically activate multipatch.esp
@@ -5846,6 +5846,7 @@ Merge Objects (--merge-objects)
 
   This feature is similar to what you get with TesTools's "Merged_Objects.esp".
   However, you should not use more than one plugin to merge objects.
+  (NOT IMPLEMENTED YET)
 
 Summoned creatures persists (--summons-persist)
 
