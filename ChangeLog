@@ -1,0 +1,69 @@
+2016-09-18  john-moonsugar  <john.moonsugar@gmail.com>
+
+	* tes3cmd: Summary of changes since 0.37v: 
+
+	* Removed Config::IniFiles it choked on some malformed
+	Morrowind.ini entries that Morrowind sometimes created. Now we use
+	my own sloppy read_gamefiles()/write_gamefiles() which are more
+	tolerant of Morrowind's idiosynchracies.
+
+	* tes3cmd now expects to live in Morrowind/tes3cmd/, and it will put
+	things like backups and cache files and other stuff there. This is
+	to avoid polluting the users "Data Files".
+
+	* The options --match and --nomatch can now be specified multiple
+	times which makes it a lot easier to specify complicated matches.
+
+	* There is a new rudimentary dump option (--format) that allows
+	the user to select specfic fields for display. This feature may
+	change completely by release. To help make this feature user
+	friendly, some field name changes have been made, such as the
+	"flags" field in "NPC_::AIDT" is now "services" as it is more
+	specific and better describes what those flags are for.
+
+	* The diff command can now sort subrecords before comparing
+	records. diff comparisons are strictly based on textual
+	represenation of records of same rectype/id. This solves the
+	problem that in some cases, ordering of subrecords differs between
+	the two plugins being compared, but they are functionally
+	equivalent. The diff feature may be completely reworked in the
+	future.
+
+	* The modify command now supports --replacefirst, in case user
+	doesn't want to replace all matching occurrences.
+
+	* The leveled lists merging has been fixed to preserve deletions
+	from leveled lists as defined by plugins that come later in the
+	load order. This should now work better than Wrye Mash's leveled
+	list merger.
+
+	* You can now specify creatures/items to be deleted from leveled
+	lists when the multipatch is created with --delete-creature and
+	--delete-item.
+
+	* Help has been slightly reorganized, when tes3cmd is invoked with
+	no arguments, you get only a short "minihelp". To get a list of
+	supported commands, you now type "tes3cmd help".
+
+	* The INFO::INTV field "compare_value" has been corrected to
+	signed long from unsigned.
+
+	* The compiled bytecode of SCPT::SCDT has more correctly elided.
+
+	* There is a new convenience method for record objects: getfield().
+
+	* The dump option --raw <file> now *appends* to the specified file
+	if it already exists. This just handles the common case that the
+	user wishes to collect raw data in a new plugin, now they don't
+	have to manually append stuff.
+
+	* There is some rudimentary code to support command extensions.
+	For example: tes3cmd mycommand --myoption1 ....
+	This would run a custom tes3cmd extension called "mycommand.pl"
+	that defines a new command. This feature could be used to write
+	and share Morrowind mods that are generated dynamically instead of
+	as plugins.
+	This feature may or may not be completely reworked in the future
+	as the API for writing extensions doesn't even really exist yet
+	unless you read the tes3cmd code and understand it (heh heh).
+
