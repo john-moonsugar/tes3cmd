@@ -1,6 +1,6 @@
 #!/usr/bin/perl
 BEGIN {
-    $::VERSION = "0.40-PRE-RELEASE-1";
+    $::VERSION = "0.40-PRE-RELEASE-2";
 }
 
 # tes3cmd: command line tool to do various hacks with TES3 plugins
@@ -785,7 +785,7 @@ our %INFO_FUN =
      '2X' => "Compare_Global",
      '3X' => "Compare_Local",
      'sX' => "Variable_Compare",
-     '  ' => "\n\tERROR: Corrupted INFO! - did you edit with MWEdit? Try resaving with the Construction Set\n\t",
+     "\000\000" => "\n\tERROR: Corrupted INFO! - did you edit with MWEdit? Try resaving with the Construction Set\n\t",
     );
 
 our %INFO_SCVR_CMP =
