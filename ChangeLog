@@ -1,6 +1,6 @@
 2016-09-18  john-moonsugar  <john.moonsugar@gmail.com>
 
-	* tes3cmd: Summary of changes since 0.37v: 
+	SUMMARY OF CHANGES SINCE 0.37v:
 
 	* Removed Config::IniFiles it choked on some malformed
 	Morrowind.ini entries that Morrowind sometimes created. Now we use
@@ -58,7 +58,7 @@
 	have to manually append stuff.
 
 	* There is some rudimentary code to support command extensions.
-	For example: tes3cmd mycommand --myoption1 ....
+	For example: tes3cmd mycommand(.pl) --myoption1 ....
 	This would run a custom tes3cmd extension called "mycommand.pl"
 	that defines a new command. This feature could be used to write
 	and share Morrowind mods that are generated dynamically instead of
@@ -67,3 +67,6 @@
 	as the API for writing extensions doesn't even really exist yet
 	unless you read the tes3cmd code and understand it (heh heh).
 
+	* When plugins are listed on the command line, tes3cmd now sorts
+	them in order by modification date, just as they would be ordered
+	in your load order.
