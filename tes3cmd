@@ -6881,14 +6881,14 @@ sub update_header {
 	    if (not($opt_header_author or $opt_header_description or $opt_header_update_record_count or
 		    $opt_header_update_masters or $opt_header_update_record_count) or
 		$opt_header_author or $opt_header_description) {
-		my $auth = $hedr_tsr->{author};
-		$auth =~ s!\000+$!!;
-		my $desc = $hedr_tsr->{description};
-		$desc =~ s!\000+$!!;
 		if ($opt_header_multiline) {
-		    print qq{$plugin:\n  AUTH=$auth\n  DESC=$desc\n};
+		    print qq{$plugin:\n}, $hedr_tsr->tostr, "\n";
 		} else {
-		    my $msg = qq{$plugin: AUTH=$auth  DESC=$desc};
+		    my $auth = $hedr_tsr->{author};
+		    $auth =~ s!\000.*$!!;
+		    my $desc = $hedr_tsr->{description};
+		    $desc =~ s!\000.*$!!;
+		    my $msg = qq{$plugin: AUTH="$auth"  DESC="$desc"};
 		    $msg =~ s/(\r)?\n/\\r\\n/gm;
 		    print "$msg\n";
 		}
@@ -7684,7 +7684,7 @@ sub cmd_multipatch {
 	print "\n".("="x75)."\n";
 	print "A multipatch has been conjured for you to address the following issues:\n";
 	my $out = open_for_output($patch_path);
-	print $out make_header({description => "MultiPatch\n\nVersion: $::VERSION"});
+	print $out make_header();
 	if ($nrenrevs) {
 	    print "\nPreserving the following $nrenrevs CELL renamings:\n";
 	    foreach my $coord (keys %rencell) {
@@ -7745,7 +7745,8 @@ sub cmd_multipatch {
 	push(@options, 'merge_lists') if $opt_multipatch_merge_lists;
 	push(@options, 'summons_persist') if $opt_multipatch_summons_persist;
 	$opt_header_update_record_count = 1;
-	$opt_header_description = "+ \r\nOPT: ".join(",", @options);
+	$opt_header_author = "tes3cmd multipatch";
+	$opt_header_description = "options: ".join(",", @options);
 	update_header($patch_path, [qw(QUIET NOBACKUP)]);
 	undef $opt_header_description;
 	unless ($opt_multipatch_no_activate) {
