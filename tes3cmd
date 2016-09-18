@@ -1293,38 +1293,40 @@ my @RD_widx = ([["equipped_index", "l"], # JMS index into NPCO inventory items o
 		 },
 	       });
 
-my @RD_AI_Activate = ([["target_id", ["Z32", "a32"]], ["unknown_1", "C"]]);
-my @RD_AI_Travel = ([["x", "f"], ["y", "f"], ["z", "f"], ["unknown_1", "l"]]); # unknown is some sort of flags ???
-my @RD_AI_Escort = ([["x", "l"], ["y", "l"], ["z", "l"], ["duration", "S"], ["target_id", ["Z32", "a32"]], ["unknown_1", "S"]]);
+
+# Note: fieldnames that end in "_#" will get an automatically generated suffix index
+my @RD_AI_Activate = ([["target_id", ["Z32", "a32"]], ["unknown_#", "C"]]);
+my @RD_AI_Travel = ([["x", "f"], ["y", "f"], ["z", "f"], ["unknown_#", "l"]]); # unknown is some sort of flags ???
+my @RD_AI_Escort = ([["x", "l"], ["y", "l"], ["z", "l"], ["duration", "S"], ["target_id", ["Z32", "a32"]], ["unknown_#", "S"]]);
 my @RD_AI_Follow = @RD_AI_Escort;
-my @RD_AI_Wander_CREA = ([["distance", "S"], ["duration", "C"], ["time_of_day", "C"], ["unknown_1", "C"], 
+my @RD_AI_Wander_CREA = ([["distance", "S"], ["duration", "C"], ["time_of_day", "C"], ["unknown_#", "C"], 
 			  ["idle_2", "C"], ["idle_3", "C"], ["idle_4", "C"], ["idle_5", "C"], ["idle_6", "C"], ["idle_7", "C"], ["idle_8", "C"], ["idle_9", "C"],
-			  ["unknown_1", "C"]], { columns => 4 });
+			  ["unknown_#", "C"]], { columns => 4 });
 my @RD_AI_Wander_NPC = ([["distance", "S"], ["duration", "S"], ["time_of_day", "C"],
 			 ["idle_2", "C"], ["idle_3", "C"], ["idle_4", "C"], ["idle_5", "C"], ["idle_6", "C"], ["idle_7", "C"], ["idle_8", "C"], ["idle_9", "C"],
-			 ["unknown_1", "C"]], { columns => 3 });
+			 ["unknown_#", "C"]], { columns => 3 });
 
 my $RD_Actor_Data =
 #     Field                              Offset
-    [(["unknown_1", "l"],	       #   0
-      ["unknown_1", "l"],	       #   4
-      ["unknown_1", "l"],	       #   8
-      ["unknown_1", "l"],	       #  12
-      ["unknown_1", "f:%f\n\t"],       #  16
+    [(["unknown_#", "l"],	       #   0
+      ["unknown_#", "l"],	       #   4
+      ["unknown_#", "l"],	       #   8
+      ["unknown_#", "l"],	       #  12
+      ["unknown_#", "f:%f\n\t"],       #  16
       ["x?", "f"],	       #  20
       ["y?", "f"],	       #  24
       ["z?", "f"],	       #  28
-      ["unknown_1", "l"],	       #  32
-      ["unknown_1", "l:%d\n\t"],       #  36
+      ["unknown_#", "l"],	       #  32
+      ["unknown_#", "l:%d\n\t"],       #  36
       ["health", "f"],		       #  40
       ["max_health", "f"],	       #  44
       ["fatigue", "f"],		       #  48
       ["max_fatigue", "f:%0.2f\n\t"],  #  52
-      ["unknown_1", "f"],	       #  56
-      ["unknown_1", "f"],	       #  60
-      ["unknown_1", "f"],	       #  64
-      ["unknown_1", "f"],	       #  68
-      ["unknown_1", "f:%0.2f\n\t"],    #  72
+      ["unknown_#", "f"],	       #  56
+      ["unknown_#", "f"],	       #  60
+      ["unknown_#", "f"],	       #  64
+      ["unknown_#", "f"],	       #  68
+      ["unknown_#", "f:%0.2f\n\t"],    #  72
       ["encumbrance", "f"],	       #  76
       ["str", "f"],		       #  80
       ["str_base", "f"],	       #  84
@@ -1345,16 +1347,16 @@ my $RD_Actor_Data =
       ["fortify_attack", "L"],	       # 144
       ["sanctuary", "L"],	       # 148
       ["resist_magicka", "C"],	       # 152
-      ["unknown_1", "H6:%s\n\t"],
+      ["unknown_#", "H6:%s\n\t"],
       ["resist_fire", "C"],	# 156 (+ Fire Shield)
-      ["unknown_1", "H6"],
+      ["unknown_#", "H6"],
       ["resist_frost", "C"],	# 160 (+ Frost Shield)
-      ["unknown_1", "H6:%s\n\t"],
+      ["unknown_#", "H6:%s\n\t"],
       ["resist_shock", "C"],	# 164 (+ Lightning Shield)
-      ["unknown_1", "H6"],
+      ["unknown_#", "H6"],
       ["resist_common_disease", "L"],		   # 168
-      ["unknown_1", "L:%d\n\t"],		   # 172
-      ["unknown_1", "L"],			   # 176
+      ["unknown_#", "L:%d\n\t"],		   # 172
+      ["unknown_#", "L"],			   # 176
       ["resist_poison", "L"],			   # 180
       ["resist_paralysis", "L"],		   # 184
       ["chameleon", "L:%d\n\t"],		   # 188
@@ -1362,20 +1364,20 @@ my $RD_Actor_Data =
       ["water_breathing", "L"],			   # 196
       ["water_walking", "L"],			   # 200
       ["swift_swim", "L:%d\n\t"],		   # 204
-      ["unknown_1", "L"],			   # 208
+      ["unknown_#", "L"],			   # 208
       ["levitate", "L"],			   # 212
       ["shield", "L"],				   # 216
-      ["unknown_1", "L"],			   # 220
-      ["unknown_1", "L"],			   # 224
+      ["unknown_#", "L"],			   # 220
+      ["unknown_#", "L"],			   # 224
       ["blind", "L:%d\n\t"],			   # 228
-      ["unknown_1", "L"],			   # 232
+      ["unknown_#", "L"],			   # 232
       ["invisibility", "L"],			   # 236
-      ["unknown_1", "L"],			   # 240
-      ["unknown_1", "L:%d\n\t"],		   # 244
-      ["unknown_1", "L"],			   # 248
-      ["unknown_1", "L"],			   # 252
-      ["unknown_1", "L"],			   # 256
-      ["unknown_1", "L"])];
+      ["unknown_#", "L"],			   # 240
+      ["unknown_#", "L:%d\n\t"],		   # 244
+      ["unknown_#", "L"],			   # 248
+      ["unknown_#", "L"],			   # 252
+      ["unknown_#", "L"],			   # 256
+      ["unknown_#", "L"])];
 
 my @RD_Enchantment =
     ([["spell_effect", "s"], ["skill", "c"], ["attribute", "c"], ["range", "c"], ["Unused", "H6"],
@@ -1395,8 +1397,8 @@ my @RD_Enchantment =
 	       $spell, $RANGE_TYPE{$self->{range}}, $self->{area}, $self->{duration}, $self->{mag_min}, $self->{mag_max} },
      });
 
-my @RD_Unknown = ([["unknown_1", "H*"]], { tostr => sub { unknown_data($_[0]->{_subbuf_}); } });
-my @RD_Unknown_ess = ([["unknown_1", "H*"]],
+my @RD_Unknown = ([["unknown_#", "H*"]], { tostr => sub { unknown_data($_[0]->{_subbuf_}); } });
+my @RD_Unknown_ess = ([["unknown_#", "H*"]],
 		      { tostr => sub { unknown_data($_[0]->{_subbuf_}); },
 			rdflags => [qw(ess)] });
 
@@ -1412,6 +1414,7 @@ my @RD_Description = ([["description", "a*"]],
 my %RDFLAGS;
 my %COLUMNS;
 
+# Note: fieldnames that end in _# will get an automatically generated suffix index
 my @RECDEFS =
     (
      [ACTI => [
@@ -1528,7 +1531,7 @@ my @RECDEFS =
 		     } elsif ($CURRENT_GROUP eq 'MVRF') {
 			 $self->{cell_destination} = unpack("Z*", $buff);
 		     } else {
-			 $self->{"unknown_1"} = unpack("H*", $buff);
+			 $self->{"unknown_#"} = unpack("H*", $buff);
 		     }
 		     return($self);
 		 },
@@ -1742,7 +1745,7 @@ my @RECDEFS =
 	       [CLDT => [["primary_attribute_1", "l", { lookup => \%ATTRIBUTE }],
 			 ["primary_attribute_2", "l", { lookup => \%ATTRIBUTE }],
 			 ["specialization", "L", { lookup => \%SPECIALIZATION }],
-			 (["minor_skill_1", "l", { lookup => \%SKILL }], ["major_skill_1", "l", { lookup => \%SKILL }]) x 5,
+			 (["minor_skill_#", "l", { lookup => \%SKILL }], ["major_skill_#", "l", { lookup => \%SKILL }]) x 5,
 			 ["flags", "L", { lookup => \%PLAYABLE }],
 			 ["autocalc", "L", { symflags => \%AUTOCALC_FLAGS }]],
 		{ columns => 2 }],
@@ -1783,7 +1786,7 @@ my @RECDEFS =
 	       [FNAM => [["name", "Z*"]]],
 	       [CNDT => [["weight", "f"]]],
 	       [FLAG => [["container_flags", "L", { symflags => \%CONTAINER_FLAGS }]]],
-	       [INDX => [["unknown_1", "L"]], { rdflags => [qw(ess)] }],
+	       [INDX => [["unknown_#", "L"]], { rdflags => [qw(ess)] }],
 	       [MODL => [["model", "Z*"]]],
 	       [NPCO => [["count", "l"], ["object", ["Z32", "a32"]]]],
 	       [SCRI => [["script", "Z*"]]],
@@ -1791,8 +1794,8 @@ my @RECDEFS =
      # CHECK CS ??? (Animations? Unknowns?)
      [CREA => [
 	       [NAME => [["id", "Z*"]]],
-	       [AIDT => [["hello", "C"], ["unknown_1", "C"], ["fight", "C"], ["flee", "C"],
-			 ["alarm", "C"], ["unknown_1", "H6"], ["services", "L", { symflags => \%AIDT_FLAGS }]],
+	       [AIDT => [["hello", "C"], ["unknown_#", "C"], ["fight", "C"], ["flee", "C"],
+			 ["alarm", "C"], ["unknown_#", "H6"], ["services", "L", { symflags => \%AIDT_FLAGS }]],
 		{
 		 rdflags => [qw(mergeable)] }],
 	       [AI_E => @RD_AI_Escort],
@@ -1829,10 +1832,9 @@ my @RECDEFS =
 			 ["agi", "L"], ["spd", "L"], ["end", "L"], ["per", "L"], ["lck", "L"],
 			 ["health", "L"], ["spell_points", "L"], ["fatigue", "L"], ["soul", "L"],
 			 ["combat", "L"], ["magic", "L"], ["stealth", "L"],
-			 (["attack_min_1", "L"], ["attack_max_1", "L"]) x 3,
+			 (["attack_min_#", "L"], ["attack_max_#", "L"]) x 3,
 			 ["gold", "L"]],
-		{
-		 columns => 4, rdflags => [qw(mergeable)] }],
+		{ columns => 4, rdflags => [qw(mergeable)] }],
 	       [SCRI => [["script", "Z*"]]],
 	       [XSCL => [["scale", "f"]]],
 	      ], { rdflags => [qw(mergeable)] }],
@@ -1901,31 +1903,31 @@ my @RECDEFS =
 	       [ANAM => [["faction", "a*"]], { rdflags => [qw(startgroup)] }],
 	       [FADT => [["attrib_1", "l", { lookup => \%ATTRIBUTE}],
 			 ["attrib_2", "l", { lookup => \%ATTRIBUTE}],
-			 (["at1_1", "l"], ["at2_1", "l"], ["sk1_1", "l"], ["sk2_1", "l"], ["rep_1", "l"]) x 10,
-			 (["sk_1", "l"]) x 6,
+			 (["at1_#", "l"], ["at2_#", "l"], ["sk1_#", "l"], ["sk2_#", "l"], ["rep_#", "l"]) x 10,
+			 (["sk_#", "l"]) x 6,
 			 ["unknown", "l"], ["flags", "L"]],
 		{ tostr => sub {
 		      my($self) = @_;
 		      my @ranks = ((defined $self->{_id_}) and (defined $FACTION_RANK{$self->{_id_}})) ?
 			  @{$FACTION_RANK{$self->{_id_}}} : ();
-		      my $n = 1;
+		      my $n = 0;
 		      my @tostr = (sprintf("Attrib_1:(%s)  Attrib_2:(%s)  Flags:%s  Unknown:%d",
 					   $ATTRIBUTE{$self->{attrib_1}}, $ATTRIBUTE{$self->{attrib_2}},
 					   flags_tostr($self->{flags}, \%FACT_FLAGS), $self->{unknown}));
-		      while (defined($self->{"at1_$n"}) and defined($ranks[$n-1])) {
-			  my $shim = ($n < 10) ? " " : "";
+		      while (defined($self->{"at1_$n"}) and defined($ranks[$n])) {
+			  my $shim = ($n < 9) ? " " : "";
 			  push(@tostr, sprintf("\t%-20s ${shim}At1_$n:%2d  ${shim}At2_$n:%2d  ${shim}Sk1_$n:%2d  ${shim}Sk2_$n:%2d  ${shim}Rep_$n:%3d",
-					       "(Rank:$ranks[$n-1])", $self->{"at1_$n"}, $self->{"at2_$n"}, $self->{"sk1_$n"}, $self->{"sk2_$n"}, $self->{"rep_$n"}));
+					       "(Rank:$ranks[$n])", $self->{"at1_$n"}, $self->{"at2_$n"}, $self->{"sk1_$n"}, $self->{"sk2_$n"}, $self->{"rep_$n"}));
 			  $n++;
 		      }
 		      if (DBG) {
-			  foreach my $i (1..6) {
+			  foreach my $i (0..5) {
 			      defined($self->{"sk_$i"}) or abort(qq{FACT::FADT->tostr: self{sk_$i} undefined});
 			      defined($SKILL{$self->{"sk_$i"}}) or abort(qq{FACT::FADT->tostr: no SKILL defined for: $self->{"sk_$i"} (sk_$i)});
 			  }
 		      }
-		      push(@tostr, sprintf("\t%-20s  %-20s  %-20s", map { qq{sk_$_:($SKILL{$self->{"sk_$_"}})}; } 1..3));
-		      push(@tostr, sprintf("\t%-20s  %-20s  %-20s", map { qq{sk_$_:($SKILL{$self->{"sk_$_"}})}; } 4..6));
+		      push(@tostr, sprintf("\t%-20s  %-20s  %-20s", map { qq{sk_$_:($SKILL{$self->{"sk_$_"}})}; } 0..2));
+		      push(@tostr, sprintf("\t%-20s  %-20s  %-20s", map { qq{sk_$_:($SKILL{$self->{"sk_$_"}})}; } 3..5));
 
 		      join("\n", @tostr);
 		  }, }],
@@ -1944,7 +1946,7 @@ my @RECDEFS =
 	      ], { id => sub {'()'},
 		   rdflags => [qw(ess)] }],
      [GAME => [			# ess, single record, no id
-	       [GMDT => [["current_cell", ["Z64", "a64"]], ["x", "l"], ["y", "l"], ["long_1", "l"], ["long_1", "l"], ["unknown_1", "H*"]]], # there is junk following the cell name ... not clear if there's a max cell name size?
+	       [GMDT => [["current_cell", ["Z64", "a64"]], ["x", "l"], ["y", "l"], ["long_#", "l"], ["long_#", "l"], ["unknown_#", "H*"]]], # there is junk following the cell name ... not clear if there's a max cell name size?
 	      ], { id => sub {'()'}, rdflags => [qw(ess)] }],
      [GLOB => [
 	       [NAME => [["id", "Z*"]]],
@@ -1978,8 +1980,8 @@ my @RECDEFS =
 		  },
 		}],
 	       [CNAM => [["class", "Z*"]]],
-	       [DATA => [["unknown_1", "L"], ["disposition", "L"], ["rank", "c"],
-			 ["sex", "c"], ["pc_rank", "c"], ["unknown_1", "C"]],
+	       [DATA => [["unknown_#", "L"], ["disposition", "L"], ["rank", "c"],
+			 ["sex", "c"], ["pc_rank", "c"], ["unknown_#", "C"]],
 		{ tostr => sub {
 		      my($self) = @_;
 		      if ($CURRENT_DIAL =~ /^Journal/i) {
@@ -2028,14 +2030,14 @@ my @RECDEFS =
 	       [NAME => [["id", "Z*"]]],
 	       [FNAM => [["name", "Z*"]]],
 	       [IRDT => [["weight", "f"], ["value", "L"],
-			 (["effect_1", "l"]) x 4,
-			 (["skill_1", "l"]) x 4,
-			 (["attribute_1", "l"]) x 4,
+			 (["effect_#", "l"]) x 4,
+			 (["skill_#", "l"]) x 4,
+			 (["attribute_#", "l"]) x 4,
 			],
 		{ tostr => sub {
 		      my($self) = @_;
 		      my @effects;
-		      foreach my $i (1..4) {
+		      foreach my $i (0..3) {
 			  if ($self->{"effect_$i"} != -1) {
 			      my $eix = $self->{"effect_$i"};
 			      my $effect = "Effect_$i:(".($SPELL_EFFECT{$eix} || "${eix}???");
@@ -2066,10 +2068,13 @@ my @RECDEFS =
      [LAND => [
 	       [INTV => [["x", "l"], ["y", "l"]]],
 	       [DATA => @RD_Unknown],
-	       [VCLR => @RD_Unknown], # vertex color?
-	       [VHGT => @RD_Unknown], # vertex height?
-	       [VNML => @RD_Unknown], # vertex normal?
-	       [VTEX => @RD_Unknown], # vertex ..?
+	       [VCLR => [(["c_#", "H3"]) x (65 * 65)], { columns => 8 }], # vertex RGB color data
+	       [VHGT => [["height", "f"],
+			 ["unknown_#", "C"],
+			 (["h_#", "c"]) x (65 * 65),
+			 ["unknown_#", "s"]], { columns => 8 }], # vertex height data
+	       [VNML => [(["n_#", "H3"]) x (65 * 65)], { columns => 8 }], # vertex normal data
+	       [VTEX => [(["i_#", "s"]) x (16 * 16)], { columns => 8 }], # vertex texture index list
 	       [WNAM => @RD_Unknown],
 	      ], { id => sub {
 		       my($self) = @_;
@@ -2175,8 +2180,8 @@ my @RECDEFS =
      [NPC_ => [
 	       [NAME => [["id", "Z*"]]],
 	       [FNAM => [["name", "Z*"]]],
-	       [AIDT => [["hello", "C"], ["unknown_1", "C"], ["fight", "C"], ["flee", "C"], ["alarm", "C"],
-			 ["unknown_1", "H6"], ["services", "L", { symflags => \%AIDT_FLAGS }]]],
+	       [AIDT => [["hello", "C"], ["unknown_#", "C"], ["fight", "C"], ["flee", "C"], ["alarm", "C"],
+			 ["unknown_#", "H6"], ["services", "L", { symflags => \%AIDT_FLAGS }]]],
 	       [AI_A => @RD_AI_Activate],
 	       [AI_E => @RD_AI_Escort],
 	       [AI_F => @RD_AI_Follow],
@@ -2286,10 +2291,10 @@ my @RECDEFS =
 	       [BNAM => [["birthsign", "Z*"]]],
 	       [CNAM => @RD_Unknown],
 	       [DNAM => [["dialog_topic", "Z*"]]],
-	       [ENAM => [(["unknown_1", "l"]) x 2]],
-	       [FNAM => [["long_1", "l"], ["long_1", "l:%-2d"], ["long_1", "l"], ["faction", "Z16"], ["float_1", "f"], ["float_1", "f"], ["long_1", "l"], ["long_1", "l"]]],
-	       [KNAM => [ (["unknown_1", "c"], ["spell_1", ["Z35:%-25s", "a35"]], ["long_1", "l:%d\n\t"]) x 10 ]], # hotkeys
-	       [LNAM => [(["unknown_1", "l"]) x 2]],
+	       [ENAM => [(["unknown_#", "l"]) x 2]],
+	       [FNAM => [["long_#", "l"], ["long_#", "l:%-2d"], ["long_#", "l"], ["faction", "Z16"], ["float_#", "f"], ["float_#", "f"], ["long_#", "l"], ["long_#", "l"]]],
+	       [KNAM => [ (["unknown_#", "c"], ["spell_#", ["Z35:%-25s", "a35"]], ["long_#", "l:%d\n\t"]) x 10 ]], # hotkeys
+	       [LNAM => [(["unknown_#", "l"]) x 2]],
 	       [MNAM => [["mnam", "Z*"]]],
 	       [NAM0 => [["nam0", "Z*"]]],
 	       [NAM1 => [["nam1", "Z*"]]],
@@ -2413,20 +2418,20 @@ my @RECDEFS =
 	      ], { rdflags => [qw(mergeable)] }],
      [PROJ => [			# projectiles (at least those in-flight at time of save)
 	       [PNAM => [
-			 ["unknown_1", "H8"],
+			 ["unknown_#", "H8"],
 			 ["speed", "f"],
-			 ["unknown_1", "H8"],
-			 ["unknown_1", "H8"],
+			 ["unknown_#", "H8"],
+			 ["unknown_#", "H8"],
 			 ["flight_time", "f"],
-			 ["unknown_1", "H8"],
-			 ["unknown_1", "H8"],
+			 ["unknown_#", "H8"],
+			 ["unknown_#", "H8"],
 			 ["speed_x", "f"],
 			 ["speed_y", "f"],
 			 ["speed_z", "f"],
 			 ["x", "f"],
 			 ["y", "f"],
 			 ["z", "f"],
-			 ["unknown_1", "H72"],
+			 ["unknown_#", "H72"],
 			 ["shooter", "Z32"],
 			 ["ammo", "Z32"],
 			 ["weapon", "Z32"],
@@ -2443,8 +2448,8 @@ my @RECDEFS =
 	       [FNAM => [["name", "Z*"]]],
 	       [NPCS => [["spell", ["Z32", "a32"]]]], # Spells
 	       [RADT => [
-			 (["skill_1", "l", { lookup => \%SKILL }], ["bonus_1", "L"]) x 7,
-			 (["attr_male_1", "l", { lookup => \%ATTRIBUTE }], ["attr_female_1", "l", { lookup => \%ATTRIBUTE }]) x 8,
+			 (["skill_#", "l", { lookup => \%SKILL }], ["bonus_#", "L"]) x 7,
+			 (["attr_male_#", "l", { lookup => \%ATTRIBUTE }], ["attr_female_#", "l", { lookup => \%ATTRIBUTE }]) x 8,
 			 ["male_height", "f"], ["female_height", "f"],
 			 ["male_weight", "f"], ["female_weight", "f"],
 			 ["flags", "L", { symflags => \%RADT_FLAGS }]],
@@ -2455,7 +2460,7 @@ my @RECDEFS =
 			 flags_tostr($self->{flags}, \%RADT_FLAGS), $self->{male_height}, $self->{male_weight},
 			     $self->{female_height}, $self->{female_weight};
 		     my $total_bonus = 0;
-		     foreach my $i (1..7) {
+		     foreach my $i (0..6) {
 			 my($skill_id, $bonus) = ($self->{"skill_$i"}, $self->{"bonus_$i"});
 			 $total_bonus += $bonus;
 			 if (DBG) {
@@ -2466,7 +2471,7 @@ my @RECDEFS =
 			 $radt .= sprintf("\n\t\t%-12s %3d", $SKILL{$skill_id}, $bonus) if ($skill_id > -1);
 		     }
 		     $radt .= "\n\t\t(Bonus Total: $total_bonus)\n\t\tBase Attributes: Male/Female";
-		     my $i = 1;
+		     my $i = 0;
 		     foreach my $attr (qw(Strength Intelligence Willpower Agility Speed Endurance Personality Luck)) {
 			 my($male, $female) = ($self->{"attr_male_$i"}, $self->{"attr_female_$i"});
 			 $radt .= sprintf("\n\t\t%-12s    %3d  %3d", $attr, $male, $female);
@@ -2482,8 +2487,8 @@ my @RECDEFS =
 	       [ACDT => $RD_Actor_Data],
 	       [ACSC => @RD_Unknown],
 	       [ACSL => @RD_Unknown],
-	       [ACTN => [["unknown_1", "L"]]], # Actor Flags ???
-	       [ANIS => [["unknown_1", "H*"]]],
+	       [ACTN => [["unknown_#", "L"]]], # Actor Flags ???
+	       [ANIS => [["unknown_#", "H*"]]],
 	       [APUD => @RD_Unknown],
 	       [CHRD => @RD_long_array_ess],
 	       [CSHN => [["currentstate_hit_target", "Z*"]], { rdflags => [qw(ess)] }],
@@ -2491,7 +2496,7 @@ my @RECDEFS =
 	       [DATA => @RD_Unknown],
 	       [FGTN => [["friend_group_member", "Z*"]]],
 	       [FRMR => [], { @RD_reference }], # is startgroup (seems like we get only one) ???
-	       [ND3D => [["unknown_1", "C"]]],
+	       [ND3D => [["unknown_#", "C"]]],
 	       [STPR => @RD_Unknown],
 	       [TGTN => [["target_group_member", "Z*"]]],
 	       [WNAM => [["readied_spell", "Z*"]]],
@@ -2591,13 +2596,13 @@ my @RECDEFS =
 	       [DESC => @RD_Description],
 	       [SKDT => [["attribute", "l", { lookup => \%ATTRIBUTE }],
 			 ["specialization", "L", { lookup => \%SPECIALIZATION }],
-			 (["use_value_1", "f"]) x 4],
+			 (["use_value_#", "f"]) x 4], # TBD check
 	       { tostr => sub {
 		     my($self) = @_;
 		     my $str = sprintf("Attribute:(%s)  Specialization:(%s)",
 				       $ATTRIBUTE{$self->{attribute}},
 				       $SPECIALIZATION{$self->{specialization}});
-		     my $n = 1;
+		     my $n = 0;
 		     foreach my $action (@{$SKILL_ACTIONS{$self->{_id_}}}) {
 			 $str .= sprintf("\n\tUse_Value_$n(%s):%0.2f", $action, $self->{"use_value_$n"});
 			 $n++;
@@ -2633,16 +2638,16 @@ my @RECDEFS =
 	      ], { rdflags => [qw(mergeable)] }],
      [SPLM => [			# ess, single record, no id
 	       [NAME => [["name", "L"]], { rdflags => [qw(startgroup)] }],
-	       [CNAM => [["unknown_1", "L"], ["unknown_1", "Z*"]]],
-	       [NAM0 => [["unknown_1", "C"]]],
-	       [NPDT => [["name", ["Z32", "a32"]], ["unknown_1", "H16"], ["magnitude", "l"],
-			 ["seconds_active", "f"], ["long_1", "l"], ["long_1", "l"]]],
-	       [SPDT => [["type", "L", { lookup => \%SPLM_TYPE }], ["name", ["Z40", "a40"]], ["long_1", "L"], ["long_1", "L"],
-			 ["caster", ["Z32", "a32"]], ["item", ["Z32", "a32"]], ["long_1", "L"], ["unknown_1", "H80"]]],
+	       [CNAM => [["unknown_#", "L"], ["unknown_#", "Z*"]]],
+	       [NAM0 => [["unknown_#", "C"]]],
+	       [NPDT => [["name", ["Z32", "a32"]], ["unknown_#", "H16"], ["magnitude", "l"],
+			 ["seconds_active", "f"], ["long_#", "l"], ["long_#", "l"]]],
+	       [SPDT => [["type", "L", { lookup => \%SPLM_TYPE }], ["name", ["Z40", "a40"]], ["long_#", "L"], ["long_#", "L"],
+			 ["caster", ["Z32", "a32"]], ["item", ["Z32", "a32"]], ["long_#", "L"], ["unknown_#", "H80"]]],
 	       [TNAM => [["target", "Z*"]]],
-	       [VNAM => [["unknown_1", "L"]]],
-	       [XNAM => [["unknown_1", "C"]]],
-	       [INAM => [["unknown_1", "H10"], ["name", "Z23"], ["unknown_1", "H*"]]],
+	       [VNAM => [["unknown_#", "L"]]],
+	       [XNAM => [["unknown_#", "C"]]],
+	       [INAM => [["unknown_#", "H10"], ["name", "Z23"], ["unknown_#", "H*"]]],
 	      ], { id => sub {'()'},
 		   rdflags => [qw(ess)] }],
      [SSCR => [
@@ -2700,17 +2705,17 @@ my @RECDEFS =
 		     return("Length:$self->{length}");
 		 },
 		}],
-	       [GMDT => [["unknown_1", "H48"], ["current_cell", ["Z64", "a64"]], ["unknown_1", "L"], ["pc_name", ["Z32", "a32"]]],
+	       [GMDT => [["unknown_#", "H48"], ["current_cell", ["Z64", "a64"]], ["unknown_#", "L"], ["pc_name", ["Z32", "a32"]]],
 		{ rdflags => [qw(ess)] }],
-	       [SCRD => [(["unknown_1", "L"]) x 5], { rdflags => [qw(ess)] }],
+	       [SCRD => [(["unknown_#", "L"]) x 5], { rdflags => [qw(ess)] }],
 	       [SCRS => [["screenshot", "H*"]], { rdflags => [qw(ess)] }],
 	      ], {
 		  id => sub { '()' },
 		 }],
      [VFXM => [			# Visual FX (ess, single record, no id) ???
-	       [VNAM => [(["unknown_1", "L"]) x 6,
-			 ["short", "S"], ["unknown_1", "H44"],
-			 ["name_1", ["Z36", "a36"]], ["name_1", ["Z68", "a68"]]]],
+	       [VNAM => [(["unknown_#", "L"]) x 6,
+			 ["short", "S"], ["unknown_#", "H44"],
+			 ["name_#", ["Z36", "a36"]], ["name_#", ["Z68", "a68"]]]],
 	      ], { id => sub {'()'},
 		   rdflags => [qw(ess)] }],
      [WEAP => [
@@ -3118,7 +3123,7 @@ sub gen_subrec_methods {
 	my $decode_pack_format;
 	my $encode_pack_format;
 	my @fieldnames;
-	my %seen;
+	my %suffix_index;
 	my @formats;
 	my $lookup;
 	my $symflags;
@@ -3127,12 +3132,10 @@ sub gen_subrec_methods {
 		my($fieldname, $fmt, $opt) = @{$_};
 		$fieldname = lc($fieldname);
 		$NAMED_TYPE{$rectype} = 1 if (($subtype eq 'NAME') and ($fieldname eq 'id'));
-		# make a unique numbered fieldname
-		while (exists $seen{$fieldname}) {
-		    $fieldname =~ s/_\d+$//; # remove _(indexed) suffix
-		    $fieldname .= '_' . ++$seen{$fieldname};
+		if (my($basename) = ($fieldname =~ /^(.+)_\#$/)) {
+		    # make a unique numbered fieldname for this record.
+		    $fieldname = $basename . "_" . $suffix_index{$basename}++;
 		}
-		$seen{$fieldname} ||= 1;
 		push(@fieldnames, $fieldname);
 		my $pfmt;
 		my $custom_format;
@@ -3216,7 +3219,7 @@ sub gen_subrec_methods {
 #		$print_format = join("  ", @formats);
 #	    }
 	    if (my $ncol = $COLUMNS{$package}) {
-		my $width = int(70 / $ncol);
+		my $width = int(78 / $ncol);
 		my $n = 0;
 		my @columnized_lines;
 		my @line;
