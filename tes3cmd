@@ -1294,7 +1294,7 @@ my @RD_widx = ([["equipped_index", "l"], # JMS index into NPCO inventory items o
 	       });
 
 
-# Note: fieldnames that end in "_#" will get an automatically generated suffix index
+# Note: fieldnames that end in "_#" will get an automatically generated suffix_index
 my @RD_AI_Activate = ([["target_id", ["Z32", "a32"]], ["unknown_#", "C"]]);
 my @RD_AI_Travel = ([["x", "f"], ["y", "f"], ["z", "f"], ["unknown_#", "l"]]); # unknown is some sort of flags ???
 my @RD_AI_Escort = ([["x", "l"], ["y", "l"], ["z", "l"], ["duration", "S"], ["target_id", ["Z32", "a32"]], ["unknown_#", "S"]]);
@@ -1414,7 +1414,7 @@ my @RD_Description = ([["description", "a*"]],
 my %RDFLAGS;
 my %COLUMNS;
 
-# Note: fieldnames that end in _# will get an automatically generated suffix index
+# Note: fieldnames that end in _# will get an automatically generated suffix_index
 my @RECDEFS =
     (
      [ACTI => [
@@ -1910,24 +1910,27 @@ my @RECDEFS =
 		      my($self) = @_;
 		      my @ranks = ((defined $self->{_id_}) and (defined $FACTION_RANK{$self->{_id_}})) ?
 			  @{$FACTION_RANK{$self->{_id_}}} : ();
-		      my $n = 0;
 		      my @tostr = (sprintf("Attrib_1:(%s)  Attrib_2:(%s)  Flags:%s  Unknown:%d",
 					   $ATTRIBUTE{$self->{attrib_1}}, $ATTRIBUTE{$self->{attrib_2}},
 					   flags_tostr($self->{flags}, \%FACT_FLAGS), $self->{unknown}));
-		      while (defined($self->{"at1_$n"}) and defined($ranks[$n])) {
-			  my $shim = ($n < 9) ? " " : "";
+		      # (Change the following if suffix_index strategy changes)
+		      my $n = 1;
+		      while (defined($self->{"at1_$n"}) and defined($ranks[$n-1])) {
+			  my $shim = ($n < 10) ? " " : "";
 			  push(@tostr, sprintf("\t%-20s ${shim}At1_$n:%2d  ${shim}At2_$n:%2d  ${shim}Sk1_$n:%2d  ${shim}Sk2_$n:%2d  ${shim}Rep_$n:%3d",
-					       "(Rank:$ranks[$n])", $self->{"at1_$n"}, $self->{"at2_$n"}, $self->{"sk1_$n"}, $self->{"sk2_$n"}, $self->{"rep_$n"}));
+					       "(Rank:$ranks[$n-1])", $self->{"at1_$n"}, $self->{"at2_$n"}, $self->{"sk1_$n"}, $self->{"sk2_$n"}, $self->{"rep_$n"}));
 			  $n++;
 		      }
 		      if (DBG) {
-			  foreach my $i (0..5) {
+			  # (Change the following if suffix_index strategy changes)
+			  foreach my $i (1..6) {
 			      defined($self->{"sk_$i"}) or abort(qq{FACT::FADT->tostr: self{sk_$i} undefined});
 			      defined($SKILL{$self->{"sk_$i"}}) or abort(qq{FACT::FADT->tostr: no SKILL defined for: $self->{"sk_$i"} (sk_$i)});
 			  }
 		      }
-		      push(@tostr, sprintf("\t%-20s  %-20s  %-20s", map { qq{sk_$_:($SKILL{$self->{"sk_$_"}})}; } 0..2));
-		      push(@tostr, sprintf("\t%-20s  %-20s  %-20s", map { qq{sk_$_:($SKILL{$self->{"sk_$_"}})}; } 3..5));
+		      # (Change the following if suffix_index strategy changes)
+		      push(@tostr, sprintf("\t%-20s  %-20s  %-20s", map { qq{sk_$_:($SKILL{$self->{"sk_$_"}})}; } 1..3));
+		      push(@tostr, sprintf("\t%-20s  %-20s  %-20s", map { qq{sk_$_:($SKILL{$self->{"sk_$_"}})}; } 4..6));
 
 		      join("\n", @tostr);
 		  }, }],
@@ -2037,7 +2040,8 @@ my @RECDEFS =
 		{ tostr => sub {
 		      my($self) = @_;
 		      my @effects;
-		      foreach my $i (0..3) {
+		      # (Change the following if suffix_index strategy changes)
+		      foreach my $i (1..4) {
 			  if ($self->{"effect_$i"} != -1) {
 			      my $eix = $self->{"effect_$i"};
 			      my $effect = "Effect_$i:(".($SPELL_EFFECT{$eix} || "${eix}???");
@@ -2068,13 +2072,118 @@ my @RECDEFS =
      [LAND => [
 	       [INTV => [["x", "l"], ["y", "l"]]],
 	       [DATA => @RD_Unknown],
-	       [VCLR => [(["c_#", "H3"]) x (65 * 65)], { columns => 8 }], # vertex RGB color data
-	       [VHGT => [["height", "f"],
-			 ["unknown_#", "C"],
-			 (["h_#", "c"]) x (65 * 65),
-			 ["unknown_#", "s"]], { columns => 8 }], # vertex height data
-	       [VNML => [(["n_#", "H3"]) x (65 * 65)], { columns => 8 }], # vertex normal data
-	       [VTEX => [(["i_#", "s"]) x (16 * 16)], { columns => 8 }], # vertex texture index list
+	       # vertex RGB color data
+	       [VCLR => [],
+		{ decode => sub {
+		      my($self, $buff, $parent) = @_;
+		      $self->{_id_} = $parent->{_id_};
+		      $self->{_subbuf_} = $buff;
+		      my $array_length = 65 * 65;
+		      my $i = 0;
+		      $self->{$i++} = $_ foreach (unpack("(H3)${array_length}", $buff));
+		      $self->{_last_idx} = $i - 1;
+		      return($self);
+		  },
+		  encode => sub {
+		      my($self) = @_;
+		      $self->{_subbuf_} = pack("(H3)*", map { $self->{$_} } (0..$self->{_last_idx}));
+		      return($self);
+		  },
+		  tostr => sub {
+		      my($self) = @_;
+		      my $str = "(Vertex Color Array, 65 x 65):\n";
+		      foreach my $i (0..64) {
+			  $str .= "\t" . join(",", map { $self->{($i * 64) + $_} } (0..64)) . "\n";
+		      }
+		      $str;
+		  }}],
+	       # vertex height data
+	       [VHGT => [], # [["height", "f"], ["unknown_#", "C"], (["h_#", "c"]) x (65 * 65), ["unknown_#", "s"]],
+		{ decode => sub {
+		      my($self, $buff, $parent) = @_;
+		      $self->{_id_} = $parent->{_id_};
+		      $self->{_subbuf_} = $buff;
+		      my $array_length = 65 * 65;
+		      my($height, $unknown_1, $unknown_2) = unpack("fCx${array_length}s", $buff);
+		      $self->{height} = $height;
+		      $self->{unknown_1} = $unknown_1;
+		      $self->{unknown_2} = $unknown_2;
+		      my $i = 0;
+		      $self->{$i++} = $_ foreach (unpack("x[fC]c${array_length}", $buff));
+		      $self->{_last_idx} = $i - 1;
+		      return($self);
+		  },
+		  encode => sub {
+		      my($self) = @_;
+		      my $array_length = 65 * 65;
+		      $self->{_subbuf_} = pack("fCc${array_length}s",
+					       $self->{height}, $self->{unknown_1},
+					       map { $self->{$_} } (0..$self->{_last_idx}),
+					       $self->{unknown_2});
+		      return($self);
+		  },
+		  tostr => sub {
+		      my($self) = @_;
+		      my $str = qq{Height:$self->{height}  Unknown_1:$self->{unknown_1}
+\t(Vertex Height Array, 65 x 65):\n};
+		      foreach my $i (0..64) {
+			  $str .= "\t" . join(",", map { $self->{($i * 64) + $_} } (0..64)) . "\n";
+		      }
+		      $str .= qq{Unknown_2:$self->{unknown_2}};
+		      $str;
+		  }}],
+	       # vertex normal data
+	       [VNML =>  [], # [(["n_#", "H3"]) x (65 * 65)],
+		{ decode => sub {
+		      my($self, $buff, $parent) = @_;
+		      $self->{_id_} = $parent->{_id_};
+		      $self->{_subbuf_} = $buff;
+		      my $array_length = 65 * 65;
+		      my $i = 0;
+		      $self->{$i++} = $_ foreach (unpack("(H3)${array_length}", $buff));
+		      $self->{_last_idx} = $i - 1;
+		      return($self);
+		  },
+		  encode => sub {
+		      my($self) = @_;
+		      $self->{_subbuf_} = pack("(H3)*", map { $self->{$_} } (0..$self->{_last_idx}));
+		      return($self);
+		  },
+		  tostr => sub {
+		      my($self) = @_;
+		      my $str = "(Vertex Normal Array, 65 x 65):\n";
+		      foreach my $i (0..64) {
+			  $str .= "\t" . join(",", map { $self->{($i * 64) + $_} } (0..64)) . "\n";
+		      }
+		      $str;
+		  }}],
+
+	       # vertex texture index list
+	       [VTEX => [], # [(["i_#", "s"]) x (16 * 16)],
+		{ decode => sub {
+		      my($self, $buff, $parent) = @_;
+		      $self->{_id_} = $parent->{_id_};
+		      $self->{_subbuf_} = $buff;
+		      my $array_length = 16 * 16;
+		      my $i = 0;
+		      $self->{$i++} = $_ foreach (unpack("s${array_length}", $buff));
+		      $self->{_last_idx} = $i - 1;
+		      return($self);
+		  },
+		  encode => sub {
+		      my($self) = @_;
+		      $self->{_subbuf_} = pack("s*", map { $self->{$_} } (0..$self->{_last_idx}));
+		      return($self);
+		  },
+		  tostr => sub {
+		      my($self) = @_;
+		      my $str = "(Vertex Texture Index Array, 16 x 16):\n";
+		      foreach my $i (0..15) {
+			  $str .= "\t" . join(",", map { $self->{($i * 15) + $_} } (0..15)) . "\n";
+		      }
+		      $str;
+		  }
+		 }],
 	       [WNAM => @RD_Unknown],
 	      ], { id => sub {
 		       my($self) = @_;
@@ -3132,9 +3241,9 @@ sub gen_subrec_methods {
 		my($fieldname, $fmt, $opt) = @{$_};
 		$fieldname = lc($fieldname);
 		$NAMED_TYPE{$rectype} = 1 if (($subtype eq 'NAME') and ($fieldname eq 'id'));
-		if (my($basename) = ($fieldname =~ /^(.+)_\#$/)) {
+		if (my($basename) = ($fieldname =~ /^(.+)_\#$/)) { # when fieldname ends in: _#
 		    # make a unique numbered fieldname for this record.
-		    $fieldname = $basename . "_" . $suffix_index{$basename}++;
+		    $fieldname = $basename . "_" . ++$suffix_index{$basename};
 		}
 		push(@fieldnames, $fieldname);
 		my $pfmt;
