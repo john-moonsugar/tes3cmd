@@ -1,0 +1,83 @@
+[This is stuff JMS writes to himself.]
+
+- implement script compiler
+- make tes3cmd work with wrye mash
+- GUI
+- support LAND/LTEX records
+- better documentation
+- merge dialog
+- Landscape height conflict detection
+- OpenMW support
+
+change default backup strategy to stash in tes3cmd/Backups
+field name inputs should be automatically lowercased so they match correctly.
+delete should support subrecord groups. (what do with MVRF ???)
+delete should have --subrec-from & --subrec-to
+#
+#add: convertdeletedtodisabled command
+- check that re-dating of cleaned (synced?) plugins works correctly on XP.
+"recover" needs to detect overwritten length fields, perhaps by backing up 1 record to previous good record start, and scan from there
+savegame cleaner: reset NPC heads/hair (recapitate)
+improve corrupted INFO (mwedit) detection, and possibly clean them
+implement a "repack" command: bsaunpack + tesfiles/resourcecheck + clean
+TES3::File (open_for_input, backup, etc)?
+implement proper verbosity
+check if unnecessary backups are made during fixit
+cleanup .tmp if die
+clean would be sped up if command added a "clean <size>" mark to plugin (use unused space in header?)
+   but it would probably not be good to change size of masters, at least.
+   instead cache in cachedir filesize + tes3cmd version and reclean if changed.
+GUI?
+add tes3spell after GUI
+reformat overdial output? just list each topic once, with list of plugins that have it
+
+to "header" command: add abitlity to add/remove masters
+# # # # # # # # # # # # # #
+add new commands:
+* conflict report (like TESPCD)
+* stats: dump a bunch of record counts/etc.
+* install/remove: install and remove mods
+* quest - dump INFO/SCPT records relevent to a quest, in quest order, pretty-printed
+* extract - dump subset of records by following dependencies
+* "gen-res" (generate resources catalog cells) poop out an esp that displays matching objects in various cells:
+     # put all mold cave static pieces in a test cell named "Mold Cave" and all guard NPCs in a cell named "Guards"
+     # maybe also specify distance between objects in generated cell
+     tes3cmd genres --resource "/Guards/npc_/class:guard/" --resource "/Mold Cave/stat/^in_mold/" --plugin my_resources.esp *.esm
+* bsa: --add/--remove/--list
+* "sos" (save our save) or "bisect" for doing a binary search for bad records/subrecords in a savegame
+* "buildcache" (build up all the cache files for cleaning, lookups, etc)
+* "codec" (print text description of TES3 codec)
+* "undo" (revert to last backups for modifying commands)
+* "tidy" (remove cache and undo stuff)
+* "undump" (canonical text to record, can't undump from wrong version)
+* "combine" (merge listed plugins into one plugin)
+* "conflict" (detailed report, toggle mergeable records from report)
+# # # # # # # # # # # # # #
+* "multipatch", to include:
+** automatically patch overdial problems?
+** gmst/global tweaks: (timescale, fCombatAngleXY)
+** import faces/hairs (avoid conflicts by dropping rest of object definition)
+** merge objects
+*** Notes: pre-scan for mergeable objects, save to cache file (foreach plugin save ID,record_offset)
+           only read mergeable objects into memory (in load order) if defined in more than 2 plugins
+*** Object Merge Gotchas
+**** autocalced vs. non-autocalced NPCs NPDT
+**** deleted body parts from clothes (redefining the set of body parts for a CLOT) (grouped subrecs)
+**** handle patch plugins that are *supposed* to only override the patchee (auto-detect?)
+# # # # # # # # # # # # # #
+lint:
+* check for possible doubling: objects with nearly the same coordinates/angles
+* check references with extremely high coordinates
+* pathgrid points at x=0,y=0,z=0 (nconn==0 is better)
+* MVRFs in .esm files
+* check for dialog edits that lose part of the filter.
+* add note about creating a shortcut on Windows
+* check for addtopic of non-existant dialog topics?
+* add a check for missing icons, etc.?
+* add a check for signrotate contamination (difficult to impossible)
+* OVR-REC specials: PGRD.?
+* check for use of == on floats in scripts! (gamehour)
+* Check for accidental conversion of float to short (putting getsecondspassed into short truncates)
+* duplicate records should also check for change in flags!
+* Check for scripts that are saved but not compiled.
+

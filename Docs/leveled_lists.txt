@@ -1,0 +1,433 @@
+
+========================================
+
+The Morrowind Patch removes "exquisite_ring_02" from LEVI
+"random_exquisite_de_fclothes1", and adds "exquisite_ring_01". Wrye Mash
+incorrectly reverts that deletion and adds "exquisite_ring_02" back to the
+list.
+
+Plugin: Morrowind.esm
+
+Record: LEVI "random_exquisite_de_fclothes1" Flags:0x0000 ()
+  NAME: ID:random_exquisite_de_fclothes1
+  DATA: List_Flags:[0x0001 (Calc_From_All_Levels_<=_PC_Level)]
+  NNAM: Chance_None:0
+  INDX: Item_Count:7
+ *INAM: Item_ID:exquisite_amulet_01
+  INTV: Level:1
+ *INAM: Item_ID:exquisite_belt_01
+  INTV: Level:1
+ *INAM: Item_ID:exquisite_robe_01
+  INTV: Level:1
+ *INAM: Item_ID:exquisite_shirt_01
+  INTV: Level:1
+ *INAM: Item_ID:exquisite_shoes_01
+  INTV: Level:1
+ *INAM: Item_ID:exquisite_skirt_01
+  INTV: Level:1
+ *INAM: Item_ID:exquisite_ring_02
+  INTV: Level:1
+
+Plugin: Morrowind Patch v1.6.6_beta.esm
+
+Record: LEVI "random_exquisite_de_fclothes1" Flags:0x0000 ()
+  NAME: ID:random_exquisite_de_fclothes1
+  DATA: List_Flags:[0x0001 (Calc_From_All_Levels_<=_PC_Level)]
+  NNAM: Chance_None:0
+  INDX: Item_Count:7
+ *INAM: Item_ID:exquisite_amulet_01
+  INTV: Level:1
+ *INAM: Item_ID:exquisite_belt_01
+  INTV: Level:1
+ *INAM: Item_ID:exquisite_robe_01
+  INTV: Level:1
+ *INAM: Item_ID:exquisite_shirt_01
+  INTV: Level:1
+ *INAM: Item_ID:exquisite_shoes_01
+  INTV: Level:1
+ *INAM: Item_ID:exquisite_skirt_01
+  INTV: Level:1
+ *INAM: Item_ID:exquisite_ring_01
+  INTV: Level:1
+
+Plugin: IceNioLivRobeReplacerPLUS.esp
+
+Record: LEVI "random_exquisite_de_fclothes1" Flags:0x0000 ()
+  NAME: ID:random_exquisite_de_fclothes1
+  DATA: List_Flags:[0x0001 (Calc_From_All_Levels_<=_PC_Level)]
+  NNAM: Chance_None:0
+  INDX: Item_Count:9
+ *INAM: Item_ID:exquisite_amulet_01
+  INTV: Level:1
+ *INAM: Item_ID:exquisite_belt_01
+  INTV: Level:1
+ *INAM: Item_ID:exquisite_robe_01
+  INTV: Level:1
+ *INAM: Item_ID:exquisite_shirt_01
+  INTV: Level:1
+ *INAM: Item_ID:exquisite_shoes_01
+  INTV: Level:1
+ *INAM: Item_ID:exquisite_skirt_01
+  INTV: Level:1
+ *INAM: Item_ID:exquisite_ring_02
+  INTV: Level:1
+ *INAM: Item_ID:1Ice_randomCommonRobes
+  INTV: Level:1
+ *INAM: Item_ID:1Ice_randomExquisiteRobes
+  INTV: Level:1
+
+Plugin: Mashed Lists.esp
+
+Record: LEVI "random_exquisite_de_fclothes1" Flags:0x0000 ()
+  NAME: ID:random_exquisite_de_fclothes1
+  DATA: List_Flags:[0x0001 (Calc_From_All_Levels_<=_PC_Level)]
+  NNAM: Chance_None:0
+  INDX: Item_Count:10
+ *INAM: Item_ID:exquisite_amulet_01
+  INTV: Level:1
+ *INAM: Item_ID:exquisite_belt_01
+  INTV: Level:1
+ *INAM: Item_ID:exquisite_robe_01
+  INTV: Level:1
+ *INAM: Item_ID:exquisite_shirt_01
+  INTV: Level:1
+ *INAM: Item_ID:exquisite_shoes_01
+  INTV: Level:1
+ *INAM: Item_ID:exquisite_skirt_01
+  INTV: Level:1
+ *INAM: Item_ID:exquisite_ring_01
+  INTV: Level:1
+ *INAM: Item_ID:exquisite_ring_02
+  INTV: Level:1
+ *INAM: Item_ID:1Ice_randomCommonRobes
+  INTV: Level:1
+ *INAM: Item_ID:1Ice_randomExquisiteRobes
+  INTV: Level:1
+
+Plugin: multipatch.esp
+
+Record: LEVI "random_exquisite_de_fclothes1" Flags:0x0000 ()
+  NAME: ID:random_exquisite_de_fclothes1
+  DATA: List_Flags:[0x0001 (Calc_From_All_Levels_<=_PC_Level)]
+  NNAM: Chance_None:0
+  INDX: Item_Count:9
+ *INAM: Item_ID:1Ice_randomCommonRobes
+  INTV: Level:1
+ *INAM: Item_ID:1Ice_randomExquisiteRobes
+  INTV: Level:1
+ *INAM: Item_ID:exquisite_amulet_01
+  INTV: Level:1
+ *INAM: Item_ID:exquisite_belt_01
+  INTV: Level:1
+ *INAM: Item_ID:exquisite_ring_01
+  INTV: Level:1
+ *INAM: Item_ID:exquisite_robe_01
+  INTV: Level:1
+ *INAM: Item_ID:exquisite_shirt_01
+  INTV: Level:1
+ *INAM: Item_ID:exquisite_shoes_01
+  INTV: Level:1
+ *INAM: Item_ID:exquisite_skirt_01
+  INTV: Level:1
+
+========================================
+
+Wrye Mash undoes deletions from LEVI "random_belladonna_spriggan". The
+Morrowind Patch removes the original items and puts one item at level 1.
+Creatures makes no changes to the list items, just the flags, so all the
+changes made by Morrowind Patch should be preserved.
+
+Plugin: Bloodmoon.esm
+
+Record: LEVI "random_belladonna_spriggan" Flags:0x0000 ()
+  NAME: ID:random_belladonna_spriggan
+  DATA: List_Flags:[0x0001 (Calc_From_All_Levels_<=_PC_Level)]
+  NNAM: Chance_None:40
+  INDX: Item_Count:2
+ *INAM: Item_ID:random_heartwood
+  INTV: Level:1
+ *INAM: Item_ID:ingred_belladonna_01
+  INTV: Level:3
+
+Plugin: Morrowind Patch v1.6.6_beta.esm
+
+Record: LEVI "random_belladonna_spriggan" Flags:0x0000 ()
+  NAME: ID:random_belladonna_spriggan
+  DATA: List_Flags:[0x0001 (Calc_From_All_Levels_<=_PC_Level)]
+  NNAM: Chance_None:40
+  INDX: Item_Count:1
+ *INAM: Item_ID:ingred_belladonna_01
+  INTV: Level:1
+
+Plugin: Creatures (Semi).esp
+
+Record: LEVI "random_belladonna_spriggan" Flags:0x0000 ()
+  NAME: ID:random_belladonna_spriggan
+  DATA: List_Flags:[0x0003 (Calc_For_Each_Item, Calc_From_All_Levels_<=_PC_Level)]
+  NNAM: Chance_None:40
+  INDX: Item_Count:2
+ *INAM: Item_ID:random_heartwood
+  INTV: Level:1
+ *INAM: Item_ID:ingred_belladonna_01
+  INTV: Level:3
+
+Plugin: Mashed Lists.esp
+
+Record: LEVI "random_belladonna_spriggan" Flags:0x0000 ()
+  NAME: ID:random_belladonna_spriggan
+  DATA: List_Flags:[0x0003 (Calc_For_Each_Item, Calc_From_All_Levels_<=_PC_Level)]
+  NNAM: Chance_None:40
+  INDX: Item_Count:3
+ *INAM: Item_ID:ingred_belladonna_01
+  INTV: Level:1
+ *INAM: Item_ID:random_heartwood
+  INTV: Level:1
+ *INAM: Item_ID:ingred_belladonna_01
+  INTV: Level:3
+
+Plugin: multipatch.esp
+
+Record: LEVI "random_belladonna_spriggan" Flags:0x0000 ()
+  NAME: ID:random_belladonna_spriggan
+  DATA: List_Flags:[0x0003 (Calc_For_Each_Item, Calc_From_All_Levels_<=_PC_Level)]
+  NNAM: Chance_None:40
+  INDX: Item_Count:1
+ *INAM: Item_ID:ingred_belladonna_01
+  INTV: Level:1
+
+========================================
+
+Wrye Mash incorrectly keeps "l_n_wpn_missle" in Leveled Item list
+"bm_chest_loot_01" at level 1, when it has been removed by plugin "Morrowind
+Patch v1.6.6_beta.esm".
+
+Plugin: Bloodmoon.esm
+
+Record: LEVI "bm_chest_loot_01" Flags:0x0000 ()
+  NAME: ID:bm_chest_loot_01
+  DATA: List_Flags:[0x0003 (Calc_For_Each_Item, Calc_From_All_Levels_<=_PC_Level)]
+  NNAM: Chance_None:50
+  INDX: Item_Count:11
+ *INAM: Item_ID:l_b_Bandit_goods
+  INTV: Level:1
+ *INAM: Item_ID:l_b_loot_tomb01
+  INTV: Level:1
+ *INAM: Item_ID:l_n_wpn_missle
+  INTV: Level:1
+ *INAM: Item_ID:random_de_cheapfood_01_ne
+  INTV: Level:1
+ *INAM: Item_ID:repair_journeyman_01
+  INTV: Level:1
+ *INAM: Item_ID:bm_random_nordsilver
+  INTV: Level:20
+ *INAM: Item_ID:bm_random_enchanted
+  INTV: Level:20
+ *INAM: Item_ID:bm_random_healthpotions
+  INTV: Level:20
+ *INAM: Item_ID:bm_random_healthpotions
+  INTV: Level:20
+ *INAM: Item_ID:bm_random_skaal
+  INTV: Level:40
+ *INAM: Item_ID:bm_randomboots_smugglers
+  INTV: Level:40
+
+Plugin: Morrowind Patch v1.6.6_beta.esm
+
+Record: LEVI "bm_chest_loot_01" Flags:0x0000 ()
+  NAME: ID:bm_chest_loot_01
+  DATA: List_Flags:[0x0003 (Calc_For_Each_Item, Calc_From_All_Levels_<=_PC_Level)]
+  NNAM: Chance_None:50
+  INDX: Item_Count:10
+ *INAM: Item_ID:l_b_Bandit_goods
+  INTV: Level:1
+ *INAM: Item_ID:l_b_loot_tomb01
+  INTV: Level:1
+ *INAM: Item_ID:random_de_cheapfood_01_ne
+  INTV: Level:1
+ *INAM: Item_ID:repair_journeyman_01
+  INTV: Level:1
+ *INAM: Item_ID:bm_random_nordsilver
+  INTV: Level:20
+ *INAM: Item_ID:bm_random_enchanted
+  INTV: Level:20
+ *INAM: Item_ID:bm_random_healthpotions
+  INTV: Level:20
+ *INAM: Item_ID:bm_random_healthpotions
+  INTV: Level:20
+ *INAM: Item_ID:bm_random_skaal
+  INTV: Level:40
+ *INAM: Item_ID:bm_randomboots_smugglers
+  INTV: Level:40
+
+Plugin: IceNioLivRobeReplacerPLUS.esp
+
+Record: LEVI "bm_chest_loot_01" Flags:0x0000 ()
+  NAME: ID:bm_chest_loot_01
+  DATA: List_Flags:[0x0003 (Calc_For_Each_Item, Calc_From_All_Levels_<=_PC_Level)]
+  NNAM: Chance_None:50
+  INDX: Item_Count:12
+ *INAM: Item_ID:l_b_Bandit_goods
+  INTV: Level:1
+ *INAM: Item_ID:l_b_loot_tomb01
+  INTV: Level:1
+ *INAM: Item_ID:l_n_wpn_missle
+  INTV: Level:1
+ *INAM: Item_ID:random_de_cheapfood_01_ne
+  INTV: Level:1
+ *INAM: Item_ID:repair_journeyman_01
+  INTV: Level:1
+ *INAM: Item_ID:bm_random_nordsilver
+  INTV: Level:20
+ *INAM: Item_ID:bm_random_enchanted
+  INTV: Level:20
+ *INAM: Item_ID:bm_random_healthpotions
+  INTV: Level:20
+ *INAM: Item_ID:bm_random_healthpotions
+  INTV: Level:20
+ *INAM: Item_ID:bm_random_skaal
+  INTV: Level:40
+ *INAM: Item_ID:bm_randomboots_smugglers
+  INTV: Level:40
+ *INAM: Item_ID:1Ice_randomBMRobes
+  INTV: Level:40
+
+Plugin: Mashed Lists.esp
+
+Record: LEVI "bm_chest_loot_01" Flags:0x0000 ()
+  NAME: ID:bm_chest_loot_01
+  DATA: List_Flags:[0x0003 (Calc_For_Each_Item, Calc_From_All_Levels_<=_PC_Level)]
+  NNAM: Chance_None:50
+  INDX: Item_Count:12
+ *INAM: Item_ID:l_b_Bandit_goods
+  INTV: Level:1
+ *INAM: Item_ID:l_b_loot_tomb01
+  INTV: Level:1
+ *INAM: Item_ID:random_de_cheapfood_01_ne
+  INTV: Level:1
+ *INAM: Item_ID:repair_journeyman_01
+  INTV: Level:1
+ *INAM: Item_ID:l_n_wpn_missle
+  INTV: Level:1
+ *INAM: Item_ID:bm_random_nordsilver
+  INTV: Level:20
+ *INAM: Item_ID:bm_random_enchanted
+  INTV: Level:20
+ *INAM: Item_ID:bm_random_healthpotions
+  INTV: Level:20
+ *INAM: Item_ID:bm_random_healthpotions
+  INTV: Level:20
+ *INAM: Item_ID:bm_random_skaal
+  INTV: Level:40
+ *INAM: Item_ID:bm_randomboots_smugglers
+  INTV: Level:40
+ *INAM: Item_ID:1Ice_randomBMRobes
+  INTV: Level:40
+
+Plugin: multipatch.esp
+
+Record: LEVI "bm_chest_loot_01" Flags:0x0000 ()
+  NAME: ID:bm_chest_loot_01
+  DATA: List_Flags:[0x0003 (Calc_For_Each_Item, Calc_From_All_Levels_<=_PC_Level)]
+  NNAM: Chance_None:50
+  INDX: Item_Count:11
+ *INAM: Item_ID:l_b_Bandit_goods
+  INTV: Level:1
+ *INAM: Item_ID:l_b_loot_tomb01
+  INTV: Level:1
+ *INAM: Item_ID:random_de_cheapfood_01_ne
+  INTV: Level:1
+ *INAM: Item_ID:repair_journeyman_01
+  INTV: Level:1
+ *INAM: Item_ID:bm_random_enchanted
+  INTV: Level:20
+ *INAM: Item_ID:bm_random_healthpotions
+  INTV: Level:20
+ *INAM: Item_ID:bm_random_healthpotions
+  INTV: Level:20
+ *INAM: Item_ID:bm_random_nordsilver
+  INTV: Level:20
+ *INAM: Item_ID:1Ice_randomBMRobes
+  INTV: Level:40
+ *INAM: Item_ID:bm_random_skaal
+  INTV: Level:40
+ *INAM: Item_ID:bm_randomboots_smugglers
+  INTV: Level:40
+
+========================================
+
+Wrye Mash incorrectly keeps "scrib blighted" in Leveled Creature list
+"in_egg_scrib_lev-1" at level 1, when it has been removed by plugin "Creatures
+(Semi).esp".
+
+Plugin: Morrowind.esm
+
+Record: LEVC "in_egg_scrib_lev-1" Flags:0x0000 ()
+  NAME: ID:in_egg_scrib_lev-1
+  DATA: List_Flags:[0x0000 ()]
+  NNAM: Chance_None:0
+  INDX: Item_Count:3
+ *CNAM: Creature_ID:scrib diseased
+  INTV: Level:1
+ *CNAM: Creature_ID:scrib
+  INTV: Level:1
+ *CNAM: Creature_ID:scrib blighted
+  INTV: Level:1
+
+Plugin: Morrowind Patch v1.6.6_beta.esm
+
+Record: LEVC "in_egg_scrib_lev-1" Flags:0x0000 ()
+  NAME: ID:in_egg_scrib_lev-1
+  DATA: List_Flags:[0x0001 (Calc_From_All_Levels_<=_PC_Level)]
+  NNAM: Chance_None:0
+  INDX: Item_Count:3
+ *CNAM: Creature_ID:scrib diseased
+  INTV: Level:1
+ *CNAM: Creature_ID:scrib
+  INTV: Level:1
+ *CNAM: Creature_ID:scrib blighted
+  INTV: Level:1
+
+Plugin: Creatures (Semi).esp
+
+Record: LEVC "in_egg_scrib_lev-1" Flags:0x0000 ()
+  NAME: ID:in_egg_scrib_lev-1
+  DATA: List_Flags:[0x0001 (Calc_From_All_Levels_<=_PC_Level)]
+  NNAM: Chance_None:0
+  INDX: Item_Count:3
+ *CNAM: Creature_ID:scrib diseased
+  INTV: Level:1
+ *CNAM: Creature_ID:scrib
+  INTV: Level:1
+ *CNAM: Creature_ID:scrib blighted
+  INTV: Level:2
+
+Plugin: Mashed Lists.esp
+
+Record: LEVC "in_egg_scrib_lev-1" Flags:0x0000 ()
+  NAME: ID:in_egg_scrib_lev-1
+  DATA: List_Flags:[0x0001 (Calc_From_All_Levels_<=_PC_Level)]
+  NNAM: Chance_None:0
+  INDX: Item_Count:4
+ *CNAM: Creature_ID:scrib diseased
+  INTV: Level:1
+ *CNAM: Creature_ID:scrib
+  INTV: Level:1
+ *CNAM: Creature_ID:scrib blighted
+  INTV: Level:1
+ *CNAM: Creature_ID:scrib blighted
+  INTV: Level:2
+
+Plugin: multipatch.esp
+
+Record: LEVC "in_egg_scrib_lev-1" Flags:0x0000 ()
+  NAME: ID:in_egg_scrib_lev-1
+  DATA: List_Flags:[0x0001 (Calc_From_All_Levels_<=_PC_Level)]
+  NNAM: Chance_None:0
+  INDX: Item_Count:3
+ *CNAM: Creature_ID:scrib
+  INTV: Level:1
+ *CNAM: Creature_ID:scrib diseased
+  INTV: Level:1
+ *CNAM: Creature_ID:scrib blighted
+  INTV: Level:2
+
