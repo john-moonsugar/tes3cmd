@@ -39,11 +39,14 @@ my $R;				# current record for modify command
 our $CURRENT_PLUGIN = '';
 our $MWDIR;			# Where Morrowind is installed
 our $DATADIR;			# where "Data Files" lives ($MWDIR/Data Files)
-our $TES3CMD_DIR;		# tes3cmd directory directory (for cache, ...) ($MWDIR/tes3cmd)
+our $TES3CMD_DIR;		# tes3cmd directory ($MWDIR/tes3cmd)
+our $CACHE_DIR;			# cache directory ($MWDIR/tes3cmd/cache)
 
 ### MAIN COMMON COMMAND OPTIONS
-our @STDOPT = (qw(assert debug verbose));	# options for all commands
+our @STDOPT = ("assert", "debug", "output=s", "verbose"); # options for all commands
 our @MODOPT = ("backup-dir=s", "hide-backups"); # options for commands that modify
+our $opt_active;				# limit processing to active plugins
+our $opt_output;				# specify output (default is STDOUT)
 our $opt_backup_dir;		# default value gets set in find_morrowind()
 our $opt_exterior;		# select only exterior cells
 our $opt_hide_backups;
@@ -89,8 +92,10 @@ our $opt_diff_sortsubrecs;
 
 our @opt_dump_format;
 our $opt_dump_no_quote;
-our $opt_dump_raw;
-our $opt_dump_raw_with_header;
+our $opt_dump_raw;		# OBSOLETE
+our $opt_dump_raw_with_header;	# OBSOLETE
+our $opt_dump_binary;
+our $opt_dump_header;
 our $opt_dump_wrap;
 
 our $opt_header_author = '';
@@ -234,9 +239,9 @@ sub mkpath {
     my($path, $perms_in) = @_;
     dbg(qq{Creating Path: "$path" with permissions: $perms_in}) if (DBG);
     my $perms = $perms_in || 0755;
-    my $dir = ($path =~ m!^/!) ? "" : ".";
+    my $dir = "";
     foreach my $name (split(m!/!, $path)) {
-	$dir = "$dir/$name";
+	$dir .= "$name/";
 	unless (-d $dir) {
 	    unless (mkdir($dir, $perms)) {
 		print STDERR qq{mkpath(): Error creating "$dir" ($!)\n};
@@ -248,6 +253,7 @@ sub mkpath {
 }
 
 # sort list of files by their modification date
+# TBD - assume @files can have directories
 sub sort_by_date {
     my($dir, @files) = @_;
     my $dirlist = list_files($dir);
@@ -255,6 +261,7 @@ sub sort_by_date {
     dbg(qq{sorted files:} . join("\n", @sorted)) if (DBG);
     return(@sorted);
 }
+
 
 ### END OF Util
 
@@ -296,11 +303,26 @@ sub find_morrowind {
     }
     if (defined $MWDIR) {
 	$TES3CMD_DIR = "$MWDIR/tes3cmd";
+	$CACHE_DIR = "$MWDIR/tes3cmd/cache";
+	unless (-d $CACHE_DIR) {
+	    Util::mkpath($CACHE_DIR, 0755) or
+		  abort(qq{Unable to make directory: "$CACHE_DIR" ($!)});
+	}
+	# TBD: remove this post release of v0.40!!!
+	my $oldcachefiles = list_files($TES3CMD_DIR);
+	foreach my $oldcache (keys %$oldcachefiles) {
+	    if ($oldcache =~ /\.cache$/ and
+		-f "$TES3CMD_DIR/$oldcache") {
+		msg(qq{[Note: Removing obsolete cache file: "$TES3CMD_DIR/$oldcache"]});
+		unlink("$TES3CMD_DIR/$oldcache");
+	    }
+	}
     } else {
 	msg(qq{WARNING: Can't find "Data Files" directory, functionality reduced. You should first cd (change directory) to somewhere under where Morrowind is installed.});
 	$MWDIR = '.';
 	$DATADIR = '.';		# not running under morrowind directory
 	$TES3CMD_DIR = '.';
+	$CACHE_DIR = '.';
 	$opt_no_cache = 1;	# don't know where MW stuff is, turn off caching
     }
     prn qq{<DATADIR> is "$DATADIR"} if (VERBOSE);
@@ -315,7 +337,7 @@ sub find_morrowind {
 	msg(qq{[Found old version of tes3cmd directory: $DATADIR/tes3cmd]});
 	msg(qq{[This old version can be safely removed. New version is now one level up.]});
     }
-    $opt_backup_dir = "$TES3CMD_DIR/backups";
+    $opt_backup_dir = "$TES3CMD_DIR/backups"; # TBD: check how we do default during init!
 } # find_morrowind
 
 BEGIN {
@@ -1173,8 +1195,8 @@ our $MARGIN = "  ";
 our $GROUPMARGIN = " *";
 our $CURRENT_DIAL;
 our $CURRENT_GROUP;
-our %FACTION_INDEX;
-our $FACT_I = 0;
+#our %FACTION_INDEX;
+#our $FACT_I = 0;
 our %FACTION_RANK;
 our %RECTYPES;
 
@@ -1183,7 +1205,6 @@ our %RECTYPES;
 sub unknown_data {
     my($buf) = @_;
     my $len = length($buf);
-    assert($len > 0, "Unknown buffer is NULL!") if (ASSERT);
     if ($len > 4) {
 	my $sep = ($len < 25) ? "  " : "\n\t";
 	(my $tmp = $buf) =~ tr/\000-\037\177-\377//d;
@@ -1198,8 +1219,10 @@ sub unknown_data {
 	my(@chars) = unpack("c*", $buf);
 	return(sprintf(qq{[UNKNOWN_BYTES: 0x%s (${[join(", ",map{"%d"}@chars)]})]},
 		       unpack("H*", $buf), @chars));
-    } else {
+    } elsif ($len == 1) {
 	return(sprintf(qq{[UNKNOWN_BYTE: 0x%s (%d)]}, unpack("H*", $buf), unpack("c", $buf)));
+    } else {
+	return("UNKNOWN_NULL: (received zero length buffer)");
     }
 }
 
@@ -1411,7 +1434,16 @@ my @RD_Description = ([["description", "a*"]],
 my %RDFLAGS;
 my %COLUMNS;
 
-# The global %TYPE_INFO defines record metainfo, like grouping and merging strategy
+# The global %FORMAT_INFO holds some formatting metadata for printing records
+my %FORMAT_INFO;
+$FORMAT_INFO{CLAS}->{CLDT}->{minor_skill_1}->{BOL} = 1;
+$FORMAT_INFO{CREA}->{NPDT}->{attack_min_1}->{BOL} = 1;
+$FORMAT_INFO{CREA}->{NPDT}->{attack_min_2}->{BOL} = 1;
+$FORMAT_INFO{CREA}->{NPDT}->{attack_min_3}->{BOL} = 1;
+$FORMAT_INFO{CREA}->{NPDT}->{gold}->{BOL} = 1;
+$FORMAT_INFO{CREA}->{NPDT}->{str}->{BOL} = 1;
+
+# The global %TYPE_INFO defines record metadata, like grouping and merging strategy
 # The following record types can be merged
 my %TYPE_INFO = map {$_,{canmerge=>1}}
     (qw(ACTI ALCH APPA ARMO BODY BOOK BSGN CLAS CLOT CONT CREA DOOR ENCH FACT
@@ -1864,6 +1896,7 @@ my @RECDEFS =
 	       [AI_T => @RD_AI_Travel],
 	       [AI_W => @RD_AI_Wander_CREA],
 	       [CNAM => [["sound_gen_creature", "Z*"]]],
+	       [CNDT => [["data", "Z*"]]], # rare???
 	       [DNAM => [["destination", "Z*"]]],
 	       [DODT => [["x", "f"], ["y", "f"], ["z", "f"], ["x_angle", "f"], ["y_angle", "f"], ["z_angle", "f"]]],
 	       [FLAG => [["flags", "L"]],
@@ -1956,7 +1989,8 @@ my @RECDEFS =
 	       [NAME => [["id", "Z*"]],
 		{ tostr => sub {
 		      my($self) = @_;
-		      $FACTION_INDEX{$self->{id}} = $FACT_I++;
+		      %FACTION_RANK = (); # reset
+		      #$FACTION_INDEX{$self->{id}} = $FACT_I++;
 		      $self->{id};
 		  }
 		}],
@@ -2114,8 +2148,9 @@ my @RECDEFS =
 			      }
 			  }
 		      }
-		      sprintf("Weight:%0.2f  Value:%d\n\t%s",
-			      $self->{weight}, $self->{value}, join("\n\t", @effects));
+		      my $effects = (@effects) ? ("\n\t" . join("\n\t", @effects)) : "";
+		      sprintf("Weight:%0.2f  Value:%d$effects",
+			      $self->{weight}, $self->{value});
 		  }}],
 	       [ITEX => [["icon", "Z*"]]],
 	       [MODL => [["model", "Z*"]]],
@@ -2191,7 +2226,7 @@ my @RECDEFS =
 		{ decode => sub {
 		      my($self, $buff, $parent) = @_;
 		      $self->{_subbuf_} = $buff;
-		      $self->{_array_} = [unpack("(H6)*", $buff)]; # TBD maybe interpret with hex()?
+		      $self->{_array_} = [unpack("(H6)*", $buff)];
 		      return($self);
 		  },
 		  encode => sub {
@@ -2433,10 +2468,10 @@ my @RECDEFS =
 			 my $n = 0;
 			 foreach my $skill (sort values %SKILL) {
 			     next if ($skill eq 'None');
-			     $skills .= "\n\t" if (($n++ % 6) == 0);
-			     $skills .= " $skill: $self->{lc($skill)}";
+			     $skills .= (($n++ % 6) == 0) ? "\n\t" : "  ";
+			     $skills .= "$skill:$self->{lc($skill)}";
 			 }
-			 sprintf "Level:%d  Str:%d  Int:%d  Wil:%d  Agi:%d  Spd:%d  End:%d  Per:%d  Lck:%d\n\t  Reputation:%d  Health:%d  Magicka:%d  Fatigue:%d  Disposition:%d\n\t  FactionIndex:%s  Rank:%s  Gold:%d\n\tSkills:$skills",
+			 sprintf "Level:%d\n\tStr:%d  Int:%d  Wil:%d  Agi:%d  Spd:%d  End:%d  Per:%d  Lck:%d\n\tReputation:%d  Health:%d  Magicka:%d  Fatigue:%d  Disposition:%d\n\tFactionIndex:%s  Rank:%s  Gold:%d\n\t(Skills):$skills",
 			     $self->{level}, $self->{str}, $self->{int}, $self->{wil}, $self->{agi}, $self->{spd},
 				 $self->{end}, $self->{per}, $self->{lck}, $self->{reputation}, $self->{health}, $self->{magicka},
 				     $self->{fatigue}, $self->{disposition}, $factionindex, $rank, $self->{gold};
@@ -2924,14 +2959,15 @@ sub new_from_input {
     }
     if ($n_read != $hdr_size) {
 	my $inp_offset = tell($fh) - $n_read;
-	abort(qq{new_from_input(): Read Error ($plugin header at byte: $inp_offset): asked for $hdr_size bytes, got $n_read});
+	# TBD: this condition indicates file corruption. it would be good to attempt to rewind and scan ahead for next viable record
+	abort(qq{new_from_input(): Read Error on header (at byte: $inp_offset): asked for $hdr_size bytes, got $n_read});
     }
     # I suspect $reclen2 is the high word of a 64-bit double long, it is effectively unused.
     my($rectype, $reclen, $reclen2, $hdrflags) = unpack("a4LLL", $rec_hdr);
     return(undef) unless defined $rectype;
     if (not $TES3::Record::RECTYPES{$rectype}) {
 	my $inp_offset = tell($fh) - $n_read;
-	err(qq{new_from_input(): Error ($plugin at byte: $inp_offset): Unknown Record Type: "$rectype"});
+	err(qq{new_from_input(): Type Error (at byte: $inp_offset): Unknown Record Type: "$rectype"});
 	# create a phony object for unknown record
 	no strict "refs";
 	my $method;
@@ -2944,13 +2980,14 @@ sub new_from_input {
     }
     if (defined($expected_type) and $expected_type ne $rectype) {
 	my $inp_offset = tell($fh) - $n_read;
-	abort(qq{new_from_input(): Error ($plugin at byte: $inp_offset): Expected: "$expected_type", got: "$rectype"});
+	msg(qq{new_from_input(): Type Error (at byte: $inp_offset): Expected: "$expected_type", got: "$rectype"});
     }
     my $recbuf = "";
     $n_read = read($fh, $recbuf, $reclen);
     if ($n_read != $reclen) {
 	my $inp_offset = tell($fh) - $n_read;
-	abort(qq{new_from_input(): Read Error ($plugin record at byte: $inp_offset, rec_type="$rectype"): asked for $reclen bytes, got $n_read});
+	# TBD: this condition indicates file corruption. it would be good to attempt to rewind and scan ahead for next viable record
+	abort(qq{new_from_input(): Read Error (at byte: $inp_offset, rec_type="$rectype"): asked for $reclen bytes, got $n_read});
     }
     return(bless({ _rectype_ => $rectype,
 		   _hdrflags_ => $hdrflags,
@@ -3397,6 +3434,13 @@ sub gen_subrec_methods {
 		    my $fname = shift @fnames;
 		    my $fwidth = $width - length($fname);
 		    $fmt =~ s/%\d*/\%${fwidth}/;
+		    if ($FORMAT_INFO{$rectype}->{$subtype}->{$fname}->{BOL}) {
+			if (@line) {
+			    push(@columnized_lines, join("  ", @line));
+			    @line = ();
+			    $n = 0;
+			}
+		    }
 		    push(@line, $fmt);
 		    if (++$n == $ncol) {
 			push(@columnized_lines, join("  ", @line));
@@ -3464,7 +3508,7 @@ sub gen_subrec_methods {
 	    }
 	}			# tsr->tostr
 
-	# tsr->fieldnames()   NOTYET
+	# tsr->fieldnames
 	unless ($package->can('fieldnames')) {
 	    $method = "${package}::fieldnames";
 	    *$method = sub { @fieldnames; };
@@ -3712,7 +3756,92 @@ sub generate_classes {
     gen_class($_) foreach (@RECDEFS);
 }
 
+##################################################
+# OBJECT MERGING METHODS
+package LEVC;
+our %user_delete_creature;
+sub merge {
+    my($self, $self_plugin, $merge_list) = @_;
+    my($last_plugin, $last_tr) = @{$merge_list->[-1]};
+    # strategy: last guy wins for List Flags
+    my $last_list_flags = $last_tr->get('DATA', 'list_flags');
+    # strategy: last guy wins for "Chance_None"
+    my $last_chance = $last_tr->get('NNAM', 'chance_none');
+    # interpret the initial leveled list definition
+    my %levlist;
+    my $firstdef;
+    my $creature_id;
+    foreach my $tsr ($self->subrecs) {
+	my $subtype = $tsr->subtype;
+	if ($subtype eq 'CNAM') {
+	    $creature_id = $tsr->{creature_id};
+	} elsif ($subtype eq 'INTV') {
+	    # increment count of times this id appears at this level
+	    $firstdef->{$creature_id}->{$tsr->{level}}++;
+	}
+    }
+    foreach my $creature_id (keys %{$firstdef}) {
+	foreach my $level (keys %{$firstdef->{$creature_id}}) {
+	    $levlist{$creature_id}->{$level} = $firstdef->{$creature_id}->{$level};
+	}
+    }
+    foreach (@{$merge_list}) {
+	my($plugin, $tr) = @{$_};
+	abort(qq{LEVC::merge: tried to merge "$tr->{_id_}" into "$self->{_id_}"\n})
+	    if ($self->{_id_} ne $tr->{_id_});
+	my $element_id;
+	my $currdef;
+	# For each item in list per plugin
+	foreach my $tsr ($tr->subrecs) {
+	    my $subtype = $tsr->subtype;
+	    if ($subtype eq 'CNAM') {
+		$creature_id = $tsr->{creature_id};
+	    } elsif ($subtype eq 'INTV') {
+		# increment count of times this id appears at this level
+		$currdef->{$creature_id}->{$tsr->{level}}++;
+	    }
+	}
+	# Additions/Changes to list
+	foreach my $element_id (keys %{$currdef}) {
+	    foreach my $level (keys %{$currdef->{$element_id}}) {
+		if ((not defined $firstdef->{$element_id}) or
+		    (not defined $firstdef->{$element_id}->{$level}) or
+		    ($currdef->{$element_id}->{$level} != $firstdef->{$element_id}->{$level})) {
+		    $levlist{$element_id}->{$level} = $currdef->{$element_id}->{$level};
+		}
+	    }
+	}
+	# Deletions from original definition
+	foreach my $element_id (keys %{$firstdef}) {
+	    if (not defined $currdef->{$element_id}) {
+		delete $levlist{$element_id};
+	    } else {
+		foreach my $level (keys %{$firstdef->{$element_id}}) {
+		    if (not defined $currdef->{$element_id}->{$level}) {
+			delete $levlist{$element_id}->{$level};
+		    }
+		}
+	    }
+	}
+    }
+#    my $newrec = [[NAME => { id => $id }],
+#		  [DATA => { list_flags => $last_list_flags }],
+#		  [NNAM => { chance_none => $last_chance }],
+#		  [INDX => { item_count => $indx }]];
+#    my $merged_tr = LEVC->new($newrec);
+#    return($merged_tr);
+} # LEVC::merge
+
+package LEVI;
+our %user_delete_item;
+sub merge {
+    my($self, $merge_list) = @_;
+    my %delete_item = map { lc, 1 } @opt_multipatch_delete_item;
+} # LEVI::merge
+
+
 ### END OF TES3::Record
+##################################################
 
 ### MAIN
 
@@ -4637,6 +4766,7 @@ just prints current active load order.
      { description => qq{Clean plugins of Evil GMSTs, junk cells, and more},
        options => [@STDOPT,
 		   @MODOPT,
+		   'active',
 		   'all'           => \$opt_clean_all,
 		   'ignore-plugin=s@',
 		   'instances'     => \$opt_clean_instances,
@@ -4666,9 +4796,14 @@ OPTIONS:
  --debug
 	turn on debug messages
 
+ --active
+	only process specified plugins that are active. If none specified,
+	process all active plugins. Plugins will be processed in the same
+	order as your normal game load order.
+
  --backup-dir
 	where backup files get stored. The default is:
-	"Data Files/tes3cmd/backups"
+	"morrowind/tes3cmd/backups"
 
  --cell-params
 	clean cell subrecords AMBI,WHGT duped from masters
@@ -4761,7 +4896,7 @@ Junk Cells (--junk-cells)
 Cache Files Feature
 
   tes3cmd will normally create cached data files for your masters in the
-  subdirectory: "Data Files/tes3cmd". If you do not wish tes3cmd to create
+  subdirectory: "morrowind/tes3cmd/cache". If you do not wish tes3cmd to create
   cache files, you can use the --no-cache option. (But it is recommended you
   do use them for speedier cleaning).
 
@@ -4804,6 +4939,7 @@ tes3cmd common "my plugin.esp" "Morrowind.esm"
      { description => qq{Delete records/subrecords/object instances from plugin},
        options => [@STDOPT,
 		   @MODOPT,
+		   'active',
 		   'ignore-plugin=s@',
 		   'instance-match=s',
 		   'instance-no-match=s',
@@ -4824,9 +4960,14 @@ OPTIONS:
  --debug
 	turn on debug messages
 
+ --active
+	only process specified plugins that are active. If none specified,
+	process all active plugins. Plugins will be processed in the same
+	order as your normal game load order.
+
  --backup-dir
 	where backup files get stored. The default is:
-	"Data Files/tes3cmd/backups"
+	"morrowind/tes3cmd/backups"
 
  --exact-id* <id-string>
 	only delete records whose ids exactly match given <id-string>
@@ -4998,11 +5139,14 @@ tes3cmd diff --not-equal "my plugin1.esp" plugin2.esp
      dump =>
      { description => qq{Dump records as text for easy study},
        options => [@STDOPT,
+		   'active',
+		   'binary',
 		   'exact-id=s@',
 		   'exterior',
 		   'flag=s@',
 		   'format=s@'		  => \@opt_dump_format,
 		   'no-quote'		  => \$opt_dump_no_quote,
+		   'header',
 		   'id=s@',
 		   'ignore-plugin=s@',
 		   'instance-match=s',
@@ -5018,36 +5162,48 @@ tes3cmd diff --not-equal "my plugin1.esp" plugin2.esp
 		   'separator=s',
 		   'type=s@'],
        preprocess =>  sub {
-	   $opt_dump_raw = $opt_dump_raw_with_header
-	       if ($opt_dump_raw_with_header);
+
+	   # translate the obsolete command switches
+	   if ($opt_dump_raw_with_header) {
+	       msg(qq{Note: --raw-with-header is obsolete, you can now use:\n\t--binary --header --output <filename>});
+	       $opt_dump_raw = $opt_dump_raw_with_header;
+	       $opt_dump_header = 1;
+	       $opt_dump_binary = 1;
+	       $opt_output = $opt_dump_raw_with_header;
+	   } elsif ($opt_dump_raw) {
+	       msg(qq{Note: --raw is obsolete, you can now use:\n\t--binary --output <filename>});
+	       $opt_dump_binary = 1;
+	       $opt_output = $opt_dump_raw;
+	   }
 	   abort("did you forget to give a filename for raw output?")
 	       if (defined($opt_dump_raw) and $opt_dump_raw =~ /^-/);
 
 	   # write out the header here as we would like to be able to append to it from multiple input plugins
-	   if ($opt_dump_raw) {
-	       if ($opt_dump_raw_with_header) {
-		   $DUMP_RAWOUT = open_for_output($opt_dump_raw);
+	   if ($opt_dump_binary) {
+	       if ($opt_dump_header) {
+		   $DUMP_RAWOUT = open_for_output($opt_output);
 		   print $DUMP_RAWOUT make_header();
 	       } else {
-		   if (-f $opt_dump_raw) {
-		       msg(qq{Appending to: "$opt_dump_raw"});
-		       $DUMP_RAWOUT = open_for_append($opt_dump_raw);
+		   if (-f $opt_output) {
+		       msg(qq{Appending to: "$opt_output"});
+		       $DUMP_RAWOUT = open_for_append($opt_output);
 		   } else {
-		       msg(qq{Creating: "$opt_dump_raw"});
-		       $DUMP_RAWOUT = open_for_output($opt_dump_raw);
+		       msg(qq{Creating: "$opt_output"});
+		       $DUMP_RAWOUT = open_for_output($opt_output);
 		   }
 	       }
 	   }
        },
+
        process => \&cmd_dump,
        postprocess => sub {
-	   if ($opt_dump_raw) {
+	   if ($opt_dump_binary) {
 	       close($DUMP_RAWOUT);
-	       if ($opt_dump_raw_with_header) {
+	       if ($opt_dump_header) {
 		   $opt_header_update_record_count = 1;
-		   update_header($opt_dump_raw, [qw(QUIET NOBACKUP)]);
+		   update_header($opt_output, [qw(QUIET NOBACKUP)]);
 	       }
-		print "\nRaw records saved in $opt_dump_raw\n";
+	       print "\nRaw records saved in $opt_output\n";
 	   }
        },
        usage => qq{Usage: tes3cmd dump OPTIONS plugin...
@@ -5055,6 +5211,17 @@ tes3cmd diff --not-equal "my plugin1.esp" plugin2.esp
 OPTIONS:
  --debug
 	 turn on debug messages
+
+ --active
+	only process specified plugins that are active. If none specified,
+	process all active plugins. Plugins will be processed in the same
+	order as your normal game load order.
+
+ --binary
+	output raw binary records. (Default is to output human readable text)
+
+ --header
+	output an initial TES3 header record.
 
  --ignore-plugin* <plugin-name>
         skips specified plugin if it appears on command line. plugin name is
@@ -5113,14 +5280,19 @@ OPTIONS:
  --no-quote
 	Turn off automatic quoting of output fields in the --format switches.
 
+ --output <filename>
+	Specify the name of the output file where records are dumped.
+
  --wrap
 	Wrap some long fields for more nicely formatted output.
 
  --raw <file>
+	[Obsolete: use --binary --output <file>]
 	dump raw records to <file>, instead of as text. If <file> exists, records
 	are appended to the end.
 
  --raw-with-header <file>
+	[Obsolete: use --binary --header --output <file>]
 	dump raw records with an initial TES3 header record to <file>
 
  --separator <string>
@@ -5248,7 +5420,7 @@ OPTIONS:
 
  --backup-dir
 	where backup files get stored. The default is:
-	"Data Files/tes3cmd/backups"
+	"morrowind/tes3cmd/backups"
 
  --hide-backups
 	any created backup files will get stashed in the backup directory
@@ -5272,6 +5444,7 @@ The fixit command does the following operations:
      { description => qq{Read/Write plugin Author/Description, sync to masters...},
        options => [@STDOPT,
 		   @MODOPT,
+		   'active',
 		   'author=s'              => \$opt_header_author,
 		   'description=s'         => \$opt_header_description,
 		   'ignore-plugin=s@',
@@ -5291,12 +5464,17 @@ OPTIONS:
  --debug
 	turn on debug messages
 
+ --active
+	only process specified plugins that are active. If none specified,
+	process all active plugins. Plugins will be processed in the same
+	order as your normal game load order.
+
  --author <author>
 	set the Author field to <author>
 
  --backup-dir
 	where backup files get stored. The default is:
-	"Data Files/tes3cmd/backups"
+	"morrowind/tes3cmd/backups"
 
  --description <desc>
 	set the Description field to <desc>
@@ -5381,6 +5559,7 @@ tes3cmd header --synchronize "my plugin.esp"
      -lint =>
      { description => qq{Scan plugins and report possible problems},
        options => [@STDOPT,
+		   'active',
 		   'all'		    => \$opt_lint_all,
 		   'autocalc-spells'	    => \$opt_lint_autocalc_spells,
 		   'bloodmoon-dependency'   => \$opt_lint_bloodmoon_dependency,
@@ -5462,6 +5641,11 @@ tes3cmd header --synchronize "my plugin.esp"
        usage => qq{Usage: tes3cmd lint OPTIONS plugin...
 
 OPTIONS:
+ --active
+	only process specified plugins that are active. If none specified,
+	process all active plugins. Plugins will be processed in the same
+	order as your normal game load order.
+
  --all/recommended
 	Enable all or recommended output options. When --recommended is
 	selected only the following options are enabled:
@@ -5659,6 +5843,7 @@ more detail about the flagged items.
       description => qq{Powerful batch record modification via user code extensions},
       options => [@STDOPT,
 		  @MODOPT,
+		  'active',
 		  'exact-id=s@',
 		  'exterior',
 		  'flag=s@',
@@ -5689,9 +5874,14 @@ OPTIONS:
  --debug
 	turn on debug messages
 
+ --active
+	only process specified plugins that are active. If none specified,
+	process all active plugins. Plugins will be processed in the same
+	order as your normal game load order.
+
  --backup-dir
 	where backup files get stored. The default is:
-	"Data Files/tes3cmd/backups"
+	"morrowind/tes3cmd/backups"
 
  --exact-id* <id-string>
 	only modify records whose ids exactly match given <id-string>
@@ -5800,6 +5990,7 @@ tes3cmd modify --type cont --run "\$R->set({i=>[-3..-1],f=>'count'}, 4)" ale_clo
       description => qq{Run user code extensions},
       options => [@STDOPT,
 		  @MODOPT,
+		  'active',
 		  'exact-id=s@',
 		  'exterior',
 		  'flag=s@',
@@ -5828,9 +6019,14 @@ OPTIONS:
  --debug
 	turn on debug messages
 
+ --active
+	only process specified plugins that are active. If none specified,
+	process all active plugins. Plugins will be processed in the same
+	order as your normal game load order.
+
  --backup-dir
 	where backup files get stored. The default is:
-	"Data Files/tes3cmd/backups"
+	"morrowind/tes3cmd/backups"
 
  --exact-id* <id-string>
 	only modify records whose ids exactly match given <id-string>
@@ -5920,8 +6116,8 @@ tes3cmd run myprog.pl ...
 		   $opt_multipatch_merge_lists = $opt_multipatch_merge_objects =
 		   $opt_multipatch_summons_persist = 1;
 	   }
-	   @opt_multipatch_delete_creature = map { lc } @opt_multipatch_delete_creature;
-	   @opt_multipatch_delete_item = map { lc } @opt_multipatch_delete_item;
+	   %LEVC::user_delete_creature = map { lc, 1 } @opt_multipatch_delete_creature;
+	   %LEVI::user_delete_item = map { lc, 1 } @opt_multipatch_delete_item;
 	   cmd_multipatch();
        },
        usage => qq{Usage: tes3cmd multipatch
@@ -6019,7 +6215,8 @@ Summoned creatures persists (--summons-persist)
   summoned creatures as persistent. The Morrowind Patch Project implements
   this fix, however other mods coming later in the load order often revert it.
   This option to the multipatch ensures that known summoned creatures are
-  flagged as persistent.
+  flagged as persistent. The Morrowind Code Patch also fixes this bug, making
+  this feature redundant.
 
 EXAMPLES:
 
@@ -6031,6 +6228,7 @@ tes3cmd multipatch
      overdial =>
      { description => qq{Identify overlapping dialog (a source of missing topic bugs)},
        options => [@STDOPT,
+		   'active',
 		   'ignore-plugin=s@',
 		   'single' => \$opt_overdial_single],
        preprocess => \&cmd_overdial,
@@ -6039,6 +6237,11 @@ tes3cmd multipatch
 OPTIONS:
  --debug
 	turn on debug messages
+
+ --active
+	only process specified plugins that are active. If none specified,
+	process all active plugins. Plugins will be processed in the same
+	order as your normal game load order.
 
  --ignore-plugin* <plugin-name>
         skips specified plugin if it appears on command line. plugin name is
@@ -6084,7 +6287,7 @@ OPTIONS:
 
  --backup-dir
 	where backup files get stored. The default is:
-	"Data Files/tes3cmd/backups"
+	"morrowind/tes3cmd/backups"
 
  --hide-backups
 	any created backup files will get stashed in the backup directory
@@ -6143,7 +6346,9 @@ tes3cmd resetdates
 
      -stats =>
      { description => qq{Print out statistics on specified plugin(s)},
-       options => [@STDOPT],
+       options => [@STDOPT,
+		   'active',
+		  ],
        process => sub {
 	   my($plugin) = @_;
 	   dbg("cmd_stats($plugin)") if (DBG);
@@ -6185,6 +6390,11 @@ tes3cmd resetdates
 OPTIONS:
  --debug
 	turn on debug messages
+
+ --active
+	only process specified plugins that are active. If none specified,
+	process all active plugins. Plugins will be processed in the same
+	order as your normal game load order.
 
  --verbose
 	print items that are undeleted from each cell.
@@ -6713,7 +6923,7 @@ sub read_dialogs {
 
 sub master_cache_path {
     my($esm) = @_;
-    my $cname = "$TES3CMD_DIR/${esm}.cache";
+    my $cname = "$CACHE_DIR/${esm}.cache";
     dbg("master_cache_path($esm) -> $cname") if (DBG);
     return($cname);
 }
@@ -6790,7 +7000,7 @@ sub load_master {
 
 sub load_mergeable_objects {
     my $cachedata = {};
-    my $mergeable_object_cache_file = "$TES3CMD_DIR/mergeable_object_data.cache";
+    my $mergeable_object_cache_file = "$CACHE_DIR/mergeable_object_data.cache";
     # load cache
     if ($opt_no_cache) {
 	unlink($mergeable_object_cache_file)
@@ -6868,7 +7078,7 @@ sub load_mergeable_objects {
 
 sub load_leveled_lists {
     my $cachedata = {};
-    my $leveled_list_cache_file = "$TES3CMD_DIR/leveled_lists_data.cache";
+    my $leveled_list_cache_file = "$CACHE_DIR/leveled_lists_data.cache";
     # load cache
     if ($opt_no_cache) {
 	unlink($leveled_list_cache_file)
@@ -7223,7 +7433,8 @@ sub buffalize {
     my(@this_group) = @_;
     my($objidx, $recbuf, $objname);
     my $frmr_tsr = shift(@this_group);
-    if ($frmr_tsr->subtype eq 'FRMR') {
+    # TBD (per abot) we check for MVRF here too, but we need to handle MVRFs better
+    if (($frmr_tsr->subtype eq 'FRMR') or (($frmr_tsr->subtype eq 'MVRF'))) {
 	$objidx = $frmr_tsr->{objidx};
     } else {
 	abort("Oops! Expected first subrec of group to be FRMR, instead got: ".$frmr_tsr->subtype);
@@ -7660,7 +7871,12 @@ sub multipatch_check_cell_rename_reversions {
     }
 } # multipatch_check_cell_rename_reversions
 
+#*** Object Merge Gotchas
+#**** autocalced vs. non-autocalced NPCs NPDT
+#**** deleted body parts from clothes (redefining the set of body parts for a CLOT) (grouped subrecs)
+#**** handle patch plugins that are *supposed* to only override the patchee (auto-detect?)
 sub multipatch_merge_objects {
+    return; #NOTYET
     my @merged_objects = ();
     my $cachedata = load_mergeable_objects();
     my $mo = {};		# merge objects data
@@ -7693,7 +7909,7 @@ sub multipatch_merge_objects {
 	    my $new_tr = $first_tr->copy;
 	    $new_tr->hdrflags($last_tr->hdrflags);
 	    foreach (@{$mo->{$rectype}->{$id}}) {
-		my($plugin, $tr) = @$_;
+		my($plugin, $tr) = @{$_};
 		my @group;    # a list of subrec groups that need to be merged
 		my $currentgroup; # current group type
 		foreach my $tsr ($tr->subrecs) {
@@ -7717,6 +7933,7 @@ sub multipatch_merge_objects {
 			    # and if it differs from the original definition
 			    my $fieldname = $fieldnames[0];
 			    my $val = $tr->get($subtype, $fieldname);
+			    # TBD: initialize a new subtype tsr if doesn't exist in new_tr?
 			    if ($first_tr->get($subtype, $fieldname) ne $val) {
 				$new_tr->set({ t=>$subtype, f=>$fieldname }, $val);
 			    }
@@ -7743,8 +7960,8 @@ sub multipatch_merge_objects {
     return(\@merged_objects);
 }				# multipatch_merge_objects
 
-sub multipatch_merge_leveled_lists {
-    my @merged_lists = ();
+sub multipatch_merge_leveled_lists_new {
+    my @merged_lists;
     my $cachedata = load_leveled_lists();
     my $ll = {};
     foreach my $plugin ($T3->load_order()) {
@@ -7777,16 +7994,19 @@ sub multipatch_merge_leveled_lists {
 		    if (VERBOSE);
 		next;
 	    }
+	    my($first_plugin, $first_tr) = shift(@{$ll->{$rectype}->{$id}});
+	    my $merged_tr = $first_tr->merge($first_plugin, $ll->{$rectype}->{$id});
+
 	    my $last_tr = $ll->{$rectype}->{$id}->[-1]->[1];
 	    # strategy: last guy wins for List Flags
 	    my $last_list_flags = $last_tr->get('DATA', 'list_flags');
 	    # strategy: last guy wins for "Chance_None"
 	    my $last_chance = $last_tr->get('NNAM', 'chance_none');
 	    my %levlist;
-	    # For each defined leveled list (LEVC/LEVI)
 	    my $firstdef;
-	    foreach my $lref (@{$ll->{$rectype}->{$id}}) {
-		my($plugin, $tr) = @$lref;
+	    # For each defined leveled list (LEVC/LEVI) from first to last in load order
+	    foreach (@{$ll->{$rectype}->{$id}}) {
+		my($plugin, $tr) = @{$_};
 		my $element_id;
 		my $currdef;
 		# For each item in list per plugin
@@ -7851,8 +8071,8 @@ sub multipatch_merge_leveled_lists {
 	    }
 	    # sort the leveled list by level, then by crea/item id
 	    my @sorted_list;
-	    foreach my $lref (sort {$a->[0] <=> $b->[0] or $a->[1] cmp $b->[1]} @unsorted_list) {
-		my($level, $element_id) = @$lref;
+	    foreach (sort {$a->[0] <=> $b->[0] or $a->[1] cmp $b->[1]} @unsorted_list) {
+		my($level, $element_id) = @{$_};
 		print "\t[lev=$level cre=$element_id]\n" if (VERBOSE);
 		push(@sorted_list, [$element_id, $level]);
 	    }
@@ -7869,15 +8089,160 @@ sub multipatch_merge_leveled_lists {
 	    my $tr;
 	    if ($rectype eq 'LEVC') {
 		$tr = LEVC->new($newrec);
-		foreach my $lref (@sorted_list) {
-		    my($element_id, $level) = @$lref;
+		foreach (@sorted_list) {
+		    my($element_id, $level) = @{$_};
 		    $tr->append(LEVC::CNAM->new({ creature_id => $element_id }),
 				LEVC::INTV->new({ level => $level }));
 		}
 	    } else {
 		$tr = LEVI->new($newrec);
-		foreach my $lref (@sorted_list) {
-		    my($element_id, $level) = @$lref;
+		foreach (@sorted_list) {
+		    my($element_id, $level) = @{$_};
+		    $tr->append(LEVI::INAM->new({ item_id => $element_id }),
+				LEVI::INTV->new({ level => $level }));
+		}
+	    }
+	    push(@merged_lists, $merged_tr);
+	}
+    }
+    return(\@merged_lists);
+}				# multipatch_merge_leveled_lists_new
+
+sub multipatch_merge_leveled_lists_old {
+    my @merged_lists;
+    my $cachedata = load_leveled_lists();
+    my $ll = {};
+    foreach my $plugin ($T3->load_order()) {
+	my $lc_plugin = lc($plugin);
+	if (defined($cachedata->{$lc_plugin})) {
+	    foreach my $rectype (qw(LEVC LEVI)) {
+		foreach my $id (keys %{$cachedata->{$lc_plugin}->{$rectype}}) {
+		    my $tr = $cachedata->{$lc_plugin}->{$rectype}->{$id};
+		    push(@{$ll->{$rectype}->{$id}}, [$plugin, $tr]);
+		}
+	    }
+	}
+    }
+    foreach my $rectype (qw(LEVC LEVI)) {
+	my %user_deletions;
+	if ($rectype eq 'LEVC') {
+	    $user_deletions{$_}++ foreach (@opt_multipatch_delete_creature);
+	} elsif ($rectype eq 'LEVI') {
+	    $user_deletions{$_}++ foreach (@opt_multipatch_delete_item);
+	}
+	foreach my $id (sort keys %{$ll->{$rectype}}) {
+	    dbg(qq{examining $rectype: "$id"}) if (DBG);
+	    if (scalar(@{$ll->{$rectype}->{$id}}) == 1) {
+		print " [LEVLIST] skipping $rectype $id - defined only once in: [$ll->{$rectype}->{$id}->[0]->[0]]\n"
+		    if (VERBOSE);
+		next;
+	    }
+	    if (scalar(@{$ll->{$rectype}->{$id}}) == 2) {
+		print " [LEVLIST] skipping $rectype $id - defined only twice, using: [$ll->{$rectype}->{$id}->[1]->[0]]\n"
+		    if (VERBOSE);
+		next;
+	    }
+	    my $last_tr = $ll->{$rectype}->{$id}->[-1]->[1];
+	    # strategy: last guy wins for List Flags
+	    my $last_list_flags = $last_tr->get('DATA', 'list_flags');
+	    # strategy: last guy wins for "Chance_None"
+	    my $last_chance = $last_tr->get('NNAM', 'chance_none');
+	    my %levlist;
+	    my $firstdef;
+	    # For each defined leveled list (LEVC/LEVI) from first to last in load order
+	    foreach (@{$ll->{$rectype}->{$id}}) {
+		my($plugin, $tr) = @{$_};
+		my $element_id;
+		my $currdef;
+		# For each item in list per plugin
+		foreach my $tsr ($tr->subrecs()) {
+		    my $subtype = $tsr->subtype;
+		    if ($subtype eq 'CNAM') {
+			$element_id = $tsr->{creature_id};
+		    } elsif ($subtype eq 'INAM') {
+			$element_id = $tsr->{item_id};
+		    } elsif ($subtype eq 'INTV') {
+			my $level = $tsr->{level};
+			# increment count of times this id appears at this level
+			$currdef->{$element_id}->{$level}++;
+		    }
+		}
+		if ($firstdef) { # merge
+		    # Additions/Changes to list
+		    foreach my $element_id (keys %{$currdef}) {
+			foreach my $level (keys %{$currdef->{$element_id}}) {
+			    if ((not defined $firstdef->{$element_id}) or
+				(not defined $firstdef->{$element_id}->{$level}) or
+				($currdef->{$element_id}->{$level} != $firstdef->{$element_id}->{$level})) {
+				$levlist{$element_id}->{$level} = $currdef->{$element_id}->{$level};
+			    }
+			}
+		    }
+		    # Deletions from original definition
+		    foreach my $element_id (keys %{$firstdef}) {
+			if (not defined $currdef->{$element_id}) {
+			    delete $levlist{$element_id};
+			} else {
+			    foreach my $level (keys %{$firstdef->{$element_id}}) {
+				if (not defined $currdef->{$element_id}->{$level}) {
+				    delete $levlist{$element_id}->{$level};
+				}
+			    }
+			}
+		    }
+		} else {	# define initial leveled list
+		    $firstdef = $currdef;
+		    foreach my $element_id (keys %{$currdef}) {
+			foreach my $level (keys %{$currdef->{$element_id}}) {
+			    $levlist{$element_id}->{$level} = $currdef->{$element_id}->{$level};
+			}
+		    }
+		}
+	    }
+	    print " [LEVLIST] Defining $rectype $id ->\n" if (VERBOSE);
+	    my @unsorted_list;
+	    my %deleted_items;
+	    foreach my $element_id (keys %levlist) {
+		foreach my $level (keys %{$levlist{$element_id}}) {
+		    my $count = $levlist{$element_id}->{$level};
+		    for (my $i=0; $i < $count; $i++) {
+			if ($user_deletions{$element_id}) { # from switches: --delete-creature|--delete-item
+			    $deleted_items{$element_id}++;
+			} else {
+			    push(@unsorted_list, [$level, $element_id]);
+			}
+		    }
+		}
+	    }
+	    # sort the leveled list by level, then by crea/item id
+	    my @sorted_list;
+	    foreach (sort {$a->[0] <=> $b->[0] or $a->[1] cmp $b->[1]} @unsorted_list) {
+		my($level, $element_id) = @{$_};
+		print "\t[lev=$level cre=$element_id]\n" if (VERBOSE);
+		push(@sorted_list, [$element_id, $level]);
+	    }
+	    my @deleted_list = sort keys %deleted_items;
+	    if (VERBOSE and @deleted_list) {
+		print "\tDeleted IDs:\n";
+		print "\t  $_\n" foreach (@deleted_list);
+	    }
+	    my $indx = scalar(@sorted_list);
+	    my $newrec = [[NAME => { id => $id }],
+			  [DATA => { list_flags => $last_list_flags }],
+			  [NNAM => { chance_none => $last_chance }],
+			  [INDX => { item_count => $indx }]];
+	    my $tr;
+	    if ($rectype eq 'LEVC') {
+		$tr = LEVC->new($newrec);
+		foreach (@sorted_list) {
+		    my($element_id, $level) = @{$_};
+		    $tr->append(LEVC::CNAM->new({ creature_id => $element_id }),
+				LEVC::INTV->new({ level => $level }));
+		}
+	    } else {
+		$tr = LEVI->new($newrec);
+		foreach (@sorted_list) {
+		    my($element_id, $level) = @{$_};
 		    $tr->append(LEVI::INAM->new({ item_id => $element_id }),
 				LEVI::INTV->new({ level => $level }));
 		}
@@ -7886,7 +8251,7 @@ sub multipatch_merge_leveled_lists {
 	}
     }
     return(\@merged_lists);
-}				# multipatch_merge_leveled_lists
+}				# multipatch_merge_leveled_lists_old
 
 sub cmd_multipatch {
     dbg("cmd_multipatch") if (DBG);
@@ -7897,7 +8262,7 @@ sub cmd_multipatch {
     my %rencell;		# cells with reverted renamings
     my %sumcrea;		# critters needing persistent flag
     my $merged_objects = multipatch_merge_objects() if ($opt_multipatch_merge_objects);
-    my $merged_lists = multipatch_merge_leveled_lists() if ($opt_multipatch_merge_lists);
+    my $merged_lists = multipatch_merge_leveled_lists_old() if ($opt_multipatch_merge_lists);
     foreach my $plugin ($T3->load_order()) {
 	$CURRENT_PLUGIN = $plugin;
 	if (my $reason = $NOPATCH_PLUGIN{lc($plugin)}) {
@@ -7954,7 +8319,6 @@ sub cmd_multipatch {
     my $nfogbugs = scalar keys %fogcell;
     my $nrenrevs = scalar(grep {defined} map {$_->{OUTPUTFLAG}} values(%rencell));
     my $nsumcrea = scalar keys %sumcrea;
-#    if ($nfogbugs or $nrenrevs or $nsumcrea or (scalar(@$merged_lists) > 0)) { # TBD: Check this change!
     if ($nfogbugs or $nrenrevs or $nsumcrea or $merged_lists or $merged_objects) {
 	print "\n".("="x75)."\n";
 	print "A multipatch has been conjured for you to address the following issues:\n";
@@ -8809,7 +9173,7 @@ sub cmd_dump {
 	    if ($selected) {
 		$nam0_tsr->{reference_count} = $n;	# update NAM0
 		my $newtr = CELL->new([@newcell]);
-		if ($opt_dump_raw) {
+		if ($opt_dump_binary) {
 		    $list_record->("Raw Output:");
 		    $newtr->write_rec($DUMP_RAWOUT);
 		} else {
@@ -8817,7 +9181,7 @@ sub cmd_dump {
 		}
 	    }
 	} else {
-	    if ($opt_dump_raw) {
+	    if ($opt_dump_binary) {
 		$list_record->("Raw Output:");
 		$tr->write_rec($DUMP_RAWOUT);
 	    } else {
@@ -9077,9 +9441,24 @@ sub tes3cmd_main {
 	    push(@plugins, $plugin);
 	}
     }
+    if ($opt_active) {
+	my @load_order = $T3->load_order;;
+	if (@plugins) {
+	    # only process specified plugins if they are active
+	    my %lo = map {lc,1} @load_order;
+	    my @active;
+	    foreach my $plug (@plugins) {
+		push(@active, $plug) if ($lo{lc($plug)});
+	    }
+	    # sort input plugins by modification date
+	    @plugins = sort { (-M $b) <=> (-M $a) } @active;
+	} else {
+	    # process all active plugins
+	    @plugins = @load_order;
+	}
+    }
     # when there's only one plugin, we don't need to print banners
     $opt_no_banner = 1 if (scalar(@plugins) == 1);
-    @plugins = Util::sort_by_date(".", @plugins);
     # if standard option --output-dir was used, ensure destination exists
     if ($opt_output_dir and not -d $opt_output_dir) {
 	mkpath($opt_output_dir, 0755) or abort("Unable to create directory: $opt_output_dir");
@@ -9099,7 +9478,8 @@ sub tes3cmd_main {
 	foreach my $plugin (@plugins) {
 	    print "Processing: $plugin\n" if (VERBOSE);
 	    $CURRENT_PLUGIN = $plugin;
-	    $CURRENT_DIAL = undef;
+	    $CURRENT_DIAL = undef; # reset
+	    #$FACT_I = 0;	  # reset
 	    $process->($plugin);
 	}
     }

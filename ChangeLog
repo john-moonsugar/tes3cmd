@@ -1,6 +1,19 @@
-2016-09-18  john-moonsugar  <john.moonsugar@gmail.com>
+2016-09-21  john-moonsugar  <john.moonsugar@gmail.com>
 
 	SUMMARY OF CHANGES SINCE 0.37v:
+
+	* Fixed faction (FACT) record stringification that caused a
+	bug in the diff command.
+
+	* New global option --output <filename>. Helps avoid shell
+	processing necessary for redirecting output.
+
+	* New dump options: --binary --header that can be used with
+	--output intead of --raw and --raw-with-header.
+
+	* Added --active command switch to limit processing to active plugins
+
+	* Added Initial support for LAND records.
 
 	* Removed Config::IniFiles it choked on some malformed
 	Morrowind.ini entries that Morrowind sometimes created. Now we use
