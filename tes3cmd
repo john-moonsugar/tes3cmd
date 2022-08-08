@@ -8655,7 +8655,7 @@ sub cmd_modify {
     my $modify_subrecords = ($opt_sub_match or $opt_sub_no_match);
     if (my $replacer = ($opt_modify_replace || $opt_modify_replacefirst)) {
 	# make the replacer case-insensitive
-	$replacer = qq{(?i)$replacer};
+	$replacer .= 'i';
 	if (not $opt_modify_replacefirst) {
 	    # make the replacer global
 	    $replacer .= 'g';
